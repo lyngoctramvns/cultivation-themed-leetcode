@@ -15,6 +15,26 @@ const CONG_PHAP = [
   "Heap",
   "Sorting",
 ];
+const CONG_PHAP_NAMES = {
+  Array: "Vạn Tượng Kiếm Trận",
+  String: "Ngôn Linh Chân Quyết",
+  "Hash Table": "Nhất Niệm Tàng Vạn Pháp",
+  "Linked List": "Trường Sinh Liên Hoàn",
+  "Stack & Queue": "Luân Hồi Pháp Trận",
+  "Two Pointers": "Song Sinh Kiếm Ý",
+  "Sliding Window": "Lưu Quang Kết Giới",
+  "Binary Search": "Thiên Cơ Truy Tầm",
+  Tree: "Linh Mộc Đạo Chủng",
+  Graph: "Chư Thiên Độn Đồ",
+  Backtracking: "Nghịch Mệnh Hồi Thiên",
+  "Dynamic Programming": "Cửu Chuyển Diễn Đạo",
+  Greedy: "Đoạt Thiên Cơ",
+  Heap: "Thiên Cơ Tranh Tiên Quyết",
+  Sorting: "Vạn Pháp Quy Nguyên",
+};
+function tenCongPhap(topic) {
+  return `${CONG_PHAP_NAMES[topic] || topic} (${topic})`;
+}
 
 const REALM_NAMES = [
   "Phàm Nhân",
@@ -40,30 +60,73 @@ const TITLE_NAMES = [
 ];
 const REALM_STEP_WEIGHTS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 const TITLE_STEP_WEIGHTS = [3, 5, 11, 14, 17, 22, 28];
-function computeThresholds(names, stepWeights, max) {
+const TRIBULATION_FROM_INDEX = 5;
+const TRIBULATION_REQUIREMENT = 6;
+const MIN_TOTAL_GOAL =
+  REALM_STEP_WEIGHTS.length +
+  (REALM_NAMES.length - TRIBULATION_FROM_INDEX) * TRIBULATION_REQUIREMENT;
+function computeThresholds(
+  names,
+  stepWeights,
+  max,
+  tribulationFromIndex = Infinity,
+) {
+  const tribulationCount = Math.max(0, names.length - tribulationFromIndex);
+  const progressionGoal = Math.max(
+    stepWeights.length,
+    max - tribulationCount * TRIBULATION_REQUIREMENT,
+  );
   const totalWeight = stepWeights.reduce((a, b) => a + b, 0);
+  const progressionSteps = stepWeights.map((weight) =>
+    Math.max(1, Math.floor((weight / totalWeight) * progressionGoal)),
+  );
+  let allocated = progressionSteps.reduce((sum, step) => sum + step, 0);
+  while (allocated < progressionGoal) {
+    let nextIndex = 0;
+    let largestRemainder = -Infinity;
+    stepWeights.forEach((weight, i) => {
+      const remainder =
+        (weight / totalWeight) * progressionGoal - progressionSteps[i];
+      if (remainder > largestRemainder) {
+        largestRemainder = remainder;
+        nextIndex = i;
+      }
+    });
+    progressionSteps[nextIndex]++;
+    allocated++;
+  }
   const mins = [0];
   let cum = 0;
-  stepWeights.forEach((w) => {
-    const step = Math.max(1, Math.round((w / totalWeight) * max));
-    cum += step;
+  progressionSteps.forEach((step, i) => {
+    const tribulation = i + 1 >= tribulationFromIndex
+      ? TRIBULATION_REQUIREMENT
+      : 0;
+    cum += step + tribulation;
     mins.push(cum);
   });
   const last = mins.length - 1;
   mins[last] = Math.max(max, mins[last - 1] + 1);
-  return names.map((name, i) => ({ min: mins[i], name }));
+  return names.map((name, i) => ({
+    min: mins[i],
+    name,
+    tribulation: i >= tribulationFromIndex ? TRIBULATION_REQUIREMENT : 0,
+  }));
+}
+function getTotalGoal() {
+  return Math.max(MIN_TOTAL_GOAL, db.player.totalGoal || 150);
 }
 function getPerCpGoal() {
   return Math.max(
     1,
-    Math.ceil((db.player.totalGoal || 150) / CONG_PHAP.length),
+    Math.ceil(getTotalGoal() / CONG_PHAP.length),
   );
 }
 function getRealms() {
   return computeThresholds(
     REALM_NAMES,
     REALM_STEP_WEIGHTS,
-    db.player.totalGoal || 150,
+    getTotalGoal(),
+    TRIBULATION_FROM_INDEX,
   );
 }
 function getTopicRealms() {
@@ -73,7 +136,7 @@ function getTitles() {
   return computeThresholds(
     TITLE_NAMES,
     TITLE_STEP_WEIGHTS,
-    db.player.totalGoal || 150,
+    getTotalGoal(),
   );
 }
 function realmForTopic(count) {
@@ -91,13 +154,33 @@ let USE_API = false; // becomes true once /api/db (server.js + db.json) is confi
 let legends = {};
 
 function defaultDB() {
-  return { player: { name: "", dailyTarget: 1 }, problems: [], settings: {} };
+  return {
+    player: { name: "", dailyTarget: 1 },
+    problems: [],
+    settings: {},
+    inventory: {
+      spiritStones: { low: 0, medium: 0, high: 0 },
+      artifacts: "",
+      elixirs: "",
+    },
+  };
 }
 function normalizeDB(d) {
   d = d || {};
   d.player = d.player || { name: "", dailyTarget: 1 };
   d.problems = d.problems || [];
   d.settings = d.settings || {};
+  const inventory = d.inventory || {};
+  const spiritStones = inventory.spiritStones || {};
+  d.inventory = {
+    spiritStones: {
+      low: Number(spiritStones.low) || 0,
+      medium: Number(spiritStones.medium) || 0,
+      high: Number(spiritStones.high) || 0,
+    },
+    artifacts: inventory.artifacts || "",
+    elixirs: inventory.elixirs || "",
+  };
   return d;
 }
 function loadDBFromLocalStorage() {
@@ -168,6 +251,16 @@ function realmFor(count) {
   for (const x of R) if (count >= x.min) r = x;
   return r.name;
 }
+function tribulationProgress(count) {
+  const nextRealm = getRealms().find(
+    (realm) => realm.tribulation && count < realm.min,
+  );
+  if (!nextRealm) return "";
+  const tribulationStartsAt = nextRealm.min - TRIBULATION_REQUIREMENT;
+  if (count < tribulationStartsAt) return "";
+  const solved = Math.min(count - tribulationStartsAt, TRIBULATION_REQUIREMENT);
+  return `Thiên kiếp ${nextRealm.name}: ${solved}/${TRIBULATION_REQUIREMENT} chiêu`;
+}
 function titleFor(count) {
   const T = getTitles();
   let t = T[0];
@@ -200,8 +293,9 @@ function populateSelects() {
   cp.innerHTML = "";
   fc.innerHTML = '<option value="">Tất cả công pháp</option>';
   CONG_PHAP.forEach((c) => {
-    cp.innerHTML += `<option value="${c}">${c}</option>`;
-    fc.innerHTML += `<option value="${c}">${c}</option>`;
+    const label = tenCongPhap(c);
+    cp.innerHTML += `<option value="${c}">${label}</option>`;
+    fc.innerHTML += `<option value="${c}">${label}</option>`;
   });
 }
 
@@ -225,8 +319,39 @@ document.getElementById("saveTarget").onclick = () => {
   renderTodayStatus();
 };
 
+function renderInventory() {
+  const inventory = db.inventory;
+  document.getElementById("spiritStoneLow").value = inventory.spiritStones.low;
+  document.getElementById("spiritStoneMedium").value =
+    inventory.spiritStones.medium;
+  document.getElementById("spiritStoneHigh").value =
+    inventory.spiritStones.high;
+  document.getElementById("inventoryArtifacts").value = inventory.artifacts;
+  document.getElementById("inventoryElixirs").value = inventory.elixirs;
+}
+
+document.getElementById("saveInventory").onclick = () => {
+  const readAmount = (id) =>
+    Math.max(0, Math.floor(Number(document.getElementById(id).value) || 0));
+  db.inventory = {
+    spiritStones: {
+      low: readAmount("spiritStoneLow"),
+      medium: readAmount("spiritStoneMedium"),
+      high: readAmount("spiritStoneHigh"),
+    },
+    artifacts: document.getElementById("inventoryArtifacts").value,
+    elixirs: document.getElementById("inventoryElixirs").value,
+  };
+  saveDB(db);
+  document.getElementById("inventoryStatus").textContent =
+    "Nhẫn trữ vật đã được lưu.";
+};
+
 document.getElementById("saveTotalGoal").onclick = () => {
-  const v = parseInt(document.getElementById("totalGoal").value) || 1;
+  const v = Math.max(
+    MIN_TOTAL_GOAL,
+    parseInt(document.getElementById("totalGoal").value) || MIN_TOTAL_GOAL,
+  );
   db.player.totalGoal = v;
   saveDB(db);
   renderGoal();
@@ -512,14 +637,17 @@ function renderHeader() {
     `${total} chiêu thức đã lĩnh ngộ`;
   document.getElementById("realmOverall").textContent =
     (db.player.name || "?") + " · " + realmFor(total);
+  const tribulationStatus = document.getElementById("tribulationStatus");
+  tribulationStatus.textContent = tribulationProgress(total);
+  tribulationStatus.style.display = tribulationStatus.textContent ? "block" : "none";
 }
 
 function renderGoal() {
-  const goal = db.player.totalGoal || 150;
+  const goal = getTotalGoal();
   document.getElementById("totalGoal").value = goal;
   const perCp = Math.ceil(goal / CONG_PHAP.length);
   document.getElementById("goalDistNote").textContent =
-    `Đại nguyện chia đều cho ${CONG_PHAP.length} công pháp: mỗi công pháp cần khoảng ${perCp} chiêu thức để viên mãn.`;
+    `Đại nguyện chia đều cho ${CONG_PHAP.length} công pháp: mỗi công pháp cần khoảng ${perCp} chiêu thức để viên mãn. Mức tối thiểu ${MIN_TOTAL_GOAL} chiêu gồm 9 bậc tu vi và 5 thiên kiếp.`;
   const total = db.problems.length;
   const pct = Math.min(100, Math.round((total / goal) * 100));
   document.getElementById("goalProgressLabel").textContent =
@@ -531,14 +659,14 @@ function renderGoal() {
 function renderCpProgress() {
   const wrap = document.getElementById("cpProgressList");
   wrap.innerHTML = "";
-  const goal = db.player.totalGoal || 150;
+  const goal = getTotalGoal();
   const perCpGoal = Math.ceil(goal / CONG_PHAP.length);
   CONG_PHAP.forEach((cp) => {
     const count = db.problems.filter((p) => p.congPhap === cp).length;
     const realm = realmForTopic(count);
     const pct = Math.min(100, Math.round((count / perCpGoal) * 100));
     wrap.innerHTML += `<div class="cp-progress">
-      <div class="cp-row"><span>${cp}</span><span style="color:var(--gold)">${realm} · ${count}/${perCpGoal} chiêu</span></div>
+      <div class="cp-row"><span>${tenCongPhap(cp)}</span><span style="color:var(--gold)">${realm} · ${count}/${perCpGoal} chiêu</span></div>
       <div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div>
     </div>`;
   });
@@ -562,7 +690,7 @@ function renderTable() {
   list.forEach((p) => {
     const tr = document.createElement("tr");
     tr.className = "solved-row";
-    tr.innerHTML = `<td>${escapeHtml(p.chieuThuc)}</td><td><span class="pill">${p.congPhap}</span></td><td>${p.lang}</td><td>${p.date}</td>`;
+    tr.innerHTML = `<td>${escapeHtml(p.chieuThuc)}</td><td><span class="pill">${tenCongPhap(p.congPhap)}</span></td><td>${p.lang}</td><td>${p.date}</td>`;
     const codeRow = document.createElement("tr");
     const codeTd = document.createElement("td");
     codeTd.colSpan = 4;
@@ -621,7 +749,7 @@ function renderCalendar() {
 }
 
 function renderRoadmap() {
-  const goal = db.player.totalGoal || 150;
+  const goal = getTotalGoal();
   const perCp = getPerCpGoal();
   const REALMS = getRealms();
   const TITLES = getTitles();
@@ -634,10 +762,13 @@ function renderRoadmap() {
     const range = next ? `${r.min} – ${next.min - 1}` : `${r.min}+`;
     const isGoalRow = goal >= r.min && (!next || goal < next.min);
     if (isGoalRow) realmReached = r.name;
-    rBody.innerHTML += `<tr class="${isGoalRow ? "goal-row" : ""}"><td><span class="pill">${r.name}</span></td><td>${range} chiêu thức</td></tr>`;
+    const tribulation = r.tribulation
+      ? `${r.tribulation} chiêu trước khi đột phá`
+      : "—";
+    rBody.innerHTML += `<tr class="${isGoalRow ? "goal-row" : ""}"><td><span class="pill">${r.name}</span></td><td>${range} chiêu thức</td><td>${tribulation}</td></tr>`;
   });
   document.getElementById("goalRealmNote").textContent =
-    `Hoàn thành trọn đại nguyện ${goal} chiêu thức sẽ đưa đạo hữu lên cảnh giới ${realmReached}.`;
+    `Hoàn thành đại nguyện ${goal} chiêu thức sẽ đưa đạo hữu lên cảnh giới ${realmReached}. Từ Hóa Thần trở lên cần vượt thiên kiếp bằng 6 chiêu; các mốc đã tính trong đại nguyện.`;
 
   const tBody = document.getElementById("titleTableBody");
   tBody.innerHTML = "";
@@ -705,6 +836,7 @@ function renderAll() {
   renderCalendar();
   renderRoadmap();
   renderLegends();
+  renderInventory();
 }
 
 (async function init() {

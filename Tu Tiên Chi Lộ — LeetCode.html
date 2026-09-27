@@ -25,6 +25,7 @@
     <button class="tab" data-tab="lich">Lịch Tu Tập</button>
     <button class="tab" data-tab="lotrinh">Lộ Trình Vấn Đạo</button>
     <button class="tab" data-tab="truyenky">Truyền Kỳ</button>
+    <button class="tab" data-tab="nhantruuvat">Nhẫn Trữ Vật</button>
     <button class="tab" data-tab="caidat">Thiết Lập Thiên Đạo</button>
   </div>
 
@@ -34,6 +35,7 @@
         <div class="avatar-holder" id="avatarHolder"><img id="avatarImg" alt="" style="display:none;"></div>
         <div>
           <div class="realm-name" id="realmOverall">Phàm Nhân</div>
+          <div id="tribulationStatus" style="display:none;color:var(--gold);font-size:.82rem;"></div>
           <div style="color:var(--text-dim);font-size:.82rem;" id="totalCount">0 chiêu thức đã lĩnh ngộ</div>
         </div>
       </div>
@@ -118,7 +120,7 @@
       <div style="color:var(--text-dim);font-size:.82rem;margin-bottom:12px;">Cảnh giới tổng thể tính trên tổng số chiêu thức đã giải trên toàn bộ các công pháp, so với đại nguyện đã đặt.</div>
       <div class="today-status ok" id="goalRealmNote" style="margin-bottom:12px;"></div>
       <table>
-        <thead><tr><th>Cảnh giới</th><th>Tổng chiêu thức cần</th></tr></thead>
+        <thead><tr><th>Cảnh giới</th><th>Tổng chiêu thức cần</th><th>Thiên kiếp</th></tr></thead>
         <tbody id="realmTableBody"></tbody>
       </table>
     </div>
@@ -146,6 +148,36 @@
     <div id="legendList"></div>
   </div>
 
+  <div class="panel" id="panel-nhantruuvat">
+    <div class="setup-note">Ghi chép tài sản trong nhẫn trữ vật.</div>
+    <div class="card">
+      <h3 class="serif" style="margin-top:0;">Linh Thạch</h3>
+      <div class="row spirit-stones-row">
+        <div>
+          <label for="spiritStoneLow">Hạ phẩm</label>
+          <input type="number" id="spiritStoneLow" min="0" step="1" value="0">
+        </div>
+        <div>
+          <label for="spiritStoneMedium">Trung phẩm</label>
+          <input type="number" id="spiritStoneMedium" min="0" step="1" value="0">
+        </div>
+        <div>
+          <label for="spiritStoneHigh">Thượng phẩm</label>
+          <input type="number" id="spiritStoneHigh" min="0" step="1" value="0">
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="serif" style="margin-top:0;">Pháp Khí, Pháp Bảo &amp; Đan Dược</h3>
+      <label for="inventoryArtifacts">Pháp Khí, Pháp Bảo</label>
+      <textarea id="inventoryArtifacts" rows="6" placeholder="Ghi lại tên, phẩm cấp và đặc tính pháp khí, pháp bảo..."></textarea>
+      <label for="inventoryElixirs">Đan Dược</label>
+      <textarea id="inventoryElixirs" rows="6" placeholder="Ghi lại tên, số lượng và công dụng đan dược..."></textarea>
+      <button class="ghost" id="saveInventory" style="margin-top:10px;">Lưu nhẫn trữ vật</button>
+      <div class="setup-note" id="inventoryStatus" role="status" aria-live="polite"></div>
+    </div>
+  </div>
+
   <div class="panel" id="panel-caidat">
     <div class="card">
       <h3 class="serif" style="margin-top:0;">Mục Tiêu Tu Luyện</h3>
@@ -156,7 +188,7 @@
       </div>
       <label>Đại nguyện tu tiên — tổng số chiêu thức muốn viên mãn</label>
       <div class="row">
-        <input type="number" id="totalGoal" min="1" value="150" style="max-width:120px;">
+        <input type="number" id="totalGoal" min="39" value="150" style="max-width:120px;">
         <button class="ghost" id="saveTotalGoal">Lưu đại nguyện</button>
       </div>
     </div>

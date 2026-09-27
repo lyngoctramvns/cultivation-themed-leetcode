@@ -34,11 +34,13 @@ You can open `Tu Tiên Chi Lộ — LeetCode.html` directly in a browser. In thi
 
 - Set a cultivation name, daily practice target, and overall problem-solving goal.
 - Record solved LeetCode problems with their topic, programming language, and solution code.
-- Track progress across 15 topics, including Array, Hash Table, Binary Search, Tree, Graph, and Dynamic Programming.
+- Track progress across 15 topics with cultivation-style names that retain the original topic in parentheses.
 - Automatically calculate cultivation realms and titles based on the total number of recorded techniques.
+- Break through tribulations from Hóa Thần onward by solving six additional techniques for each breakthrough. The minimum overall goal is 39 techniques.
 - View practice streaks and a calendar covering the last 30 days.
 - Search recorded problems by name or filter them by topic.
 - Write legendary stories for newly unlocked realms.
+- Track low-, mid-, and high-grade spirit stones, artifacts, treasures, and elixirs in the **Nhẫn Trữ Vật** tab.
 - Customize the avatar, background image, interface colors, and panel opacity.
 
 ## Quick Usage Guide
@@ -49,17 +51,18 @@ You can open `Tu Tiên Chi Lộ — LeetCode.html` directly in a browser. In thi
 4. Click **Đột Phá Cảnh Giới** to save the technique.
 5. Review statistics in **Công Pháp**, **Lịch Tu Tập**, and **Lộ Trình Vấn Đạo**.
 6. When a new realm is unlocked, open **Truyền Kỳ** to add to the character's story.
+7. Open **Nhẫn Trữ Vật** to update spirit-stone amounts and write inventory notes, then click **Lưu nhẫn trữ vật**.
 
 ## Data Storage
 
 When running with the local server:
 
-- `db.json`: cultivation name, goals, saved problems, and interface settings.
+- `db.json`: cultivation name, goals, saved problems, interface settings, and inventory contents.
 - `truyenky.json`: legendary story content.
 
 When opening the HTML file directly, data is stored in the browser's `localStorage`.
 
-Back up both JSON files before making major changes. The **Chuyển kiếp** button in **Lịch Tu Tập** permanently deletes all saved progress and story data.
+Back up both JSON files before making major changes. The **Chuyển kiếp** button in **Lịch Tu Tập** permanently deletes all saved progress, inventory contents, and story data.
 
 ## Main Project Files
 

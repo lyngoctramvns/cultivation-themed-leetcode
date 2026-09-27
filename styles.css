@@ -273,6 +273,9 @@ label {
   color: var(--text-dim);
   margin: 12px 0 5px;
 }
+.spirit-stones-row label {
+  margin-top: 0;
+}
 input[type="text"],
 select,
 input[type="number"] {
