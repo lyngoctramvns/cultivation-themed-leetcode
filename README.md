@@ -41,6 +41,9 @@ You can open `Tu Tiên Chi Lộ — LeetCode.html` directly in a browser. In thi
 - Search recorded problems by name or filter them by topic.
 - Write legendary stories for newly unlocked realms.
 - Track low-, mid-, and high-grade spirit stones, artifacts, treasures, and elixirs in the **Nhẫn Trữ Vật** tab.
+- Use the **Tông Môn** tab, shown before **Tu Luyện**, to create a sect profile. It starts at “Chưa bái nhập” and lets the player enter a sect name, each relationship's name and description (master, shizun, senior and junior fellow disciples, and dao companion), and a freeform sect description.
+- Record joining, leaving, or expulsion from a sect. Leaving or expulsion preserves the profile for the character's story.
+- Click any text area to edit its contents in a larger pop-up, then apply or cancel the change.
 - Customize the avatar, background image, interface colors, and panel opacity.
 
 ## Quick Usage Guide
@@ -52,17 +55,18 @@ You can open `Tu Tiên Chi Lộ — LeetCode.html` directly in a browser. In thi
 5. Review statistics in **Công Pháp**, **Lịch Tu Tập**, and **Lộ Trình Vấn Đạo**.
 6. When a new realm is unlocked, open **Truyền Kỳ** to add to the character's story.
 7. Open **Nhẫn Trữ Vật** to update spirit-stone amounts and write inventory notes, then click **Lưu nhẫn trữ vật**.
+8. Open **Tông Môn** and click **Bái nhập tông môn** to create a profile. Fill in any applicable relationship names and descriptions plus the sect description, then click **Lưu thông tin tông môn**. Use **Rời khỏi tông môn** or **Bị trục xuất khỏi sư môn** to record how the character leaves; the profile remains saved.
 
 ## Data Storage
 
 When running with the local server:
 
-- `db.json`: cultivation name, goals, saved problems, interface settings, and inventory contents.
+- `db.json`: cultivation name, goals, saved problems, interface settings, inventory contents, and sect profile/status.
 - `truyenky.json`: legendary story content.
 
 When opening the HTML file directly, data is stored in the browser's `localStorage`.
 
-Back up both JSON files before making major changes. The **Chuyển kiếp** button in **Lịch Tu Tập** permanently deletes all saved progress, inventory contents, and story data.
+Back up both JSON files before making major changes. The **Chuyển kiếp** button in **Lịch Tu Tập** permanently deletes all saved progress, inventory contents, sect information, and story data.
 
 ## Main Project Files
 

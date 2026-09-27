@@ -20,6 +20,7 @@
   </div>
 
   <div class="tabs">
+    <button class="tab" data-tab="tongmon">Tông Môn</button>
     <button class="tab active" data-tab="tuluyen">Tu Luyện</button>
     <button class="tab" data-tab="congphap">Công Pháp</button>
     <button class="tab" data-tab="lich">Lịch Tu Tập</button>
@@ -71,7 +72,7 @@
       <label>Tên chiêu thức (tên bài LeetCode) — bắt buộc</label>
       <input type="text" id="chieuThucInput" placeholder="Vd: Two Sum">
       <label>Khẩu quyết vận công (dán code giải vào đây) — bắt buộc, để tránh tẩu hỏa nhập ma (gian lận)</label>
-      <textarea id="codeInput" placeholder="def solve(...):
+      <textarea id="codeInput" data-editor-title="Khẩu quyết vận công" placeholder="def solve(...):
     ..."></textarea>
       <div class="err" id="formErr">Cần điền đủ tên chiêu thức và khẩu quyết trước khi đột phá cảnh giới.</div>
       <button class="primary" id="submitBtn">Đột Phá Cảnh Giới</button>
@@ -178,6 +179,69 @@
     </div>
   </div>
 
+  <div class="panel" id="panel-tongmon">
+    <div class="card">
+      <h3 class="serif" style="margin-top:0;">Tông Môn</h3>
+      <div id="sectStatus" class="today-status warn" role="status" aria-live="polite">Chưa bái nhập tông môn.</div>
+      <button class="primary" id="joinSect" style="margin-top:10px;">Bái nhập tông môn</button>
+    </div>
+    <div class="card" id="sectDetails" style="display:none;">
+      <h3 class="serif" style="margin-top:0;">Thông Tin Tông Môn</h3>
+      <label for="sectName">Tên tông môn</label>
+      <input type="text" id="sectName" placeholder="Nhập tên tông môn">
+      <div class="row">
+        <div>
+          <label for="sectMaster">Sư phụ</label>
+          <input type="text" id="sectMaster" placeholder="Nếu có">
+          <label for="sectMasterDescription">Mô tả sư phụ</label>
+          <textarea class="sect-person-description" id="sectMasterDescription" rows="2" placeholder="Tính cách, vai trò, mối quan hệ..."></textarea>
+        </div>
+        <div>
+          <label for="sectShizun">Sư tôn</label>
+          <input type="text" id="sectShizun" placeholder="Nếu có">
+          <label for="sectShizunDescription">Mô tả sư tôn</label>
+          <textarea class="sect-person-description" id="sectShizunDescription" rows="2" placeholder="Tính cách, vai trò, mối quan hệ..."></textarea>
+        </div>
+        <div>
+          <label for="sectSeniorSister">Sư tỷ</label>
+          <input type="text" id="sectSeniorSister" placeholder="Nếu có">
+          <label for="sectSeniorSisterDescription">Mô tả sư tỷ</label>
+          <textarea class="sect-person-description" id="sectSeniorSisterDescription" rows="2" placeholder="Tính cách, vai trò, mối quan hệ..."></textarea>
+        </div>
+        <div>
+          <label for="sectJuniorSister">Sư muội</label>
+          <input type="text" id="sectJuniorSister" placeholder="Nếu có">
+          <label for="sectJuniorSisterDescription">Mô tả sư muội</label>
+          <textarea class="sect-person-description" id="sectJuniorSisterDescription" rows="2" placeholder="Tính cách, vai trò, mối quan hệ..."></textarea>
+        </div>
+        <div>
+          <label for="sectSeniorBrother">Sư huynh</label>
+          <input type="text" id="sectSeniorBrother" placeholder="Nếu có">
+          <label for="sectSeniorBrotherDescription">Mô tả sư huynh</label>
+          <textarea class="sect-person-description" id="sectSeniorBrotherDescription" rows="2" placeholder="Tính cách, vai trò, mối quan hệ..."></textarea>
+        </div>
+        <div>
+          <label for="sectJuniorBrother">Sư đệ</label>
+          <input type="text" id="sectJuniorBrother" placeholder="Nếu có">
+          <label for="sectJuniorBrotherDescription">Mô tả sư đệ</label>
+          <textarea class="sect-person-description" id="sectJuniorBrotherDescription" rows="2" placeholder="Tính cách, vai trò, mối quan hệ..."></textarea>
+        </div>
+      </div>
+      <label for="sectDaoCompanion">Đạo lữ (nếu có)</label>
+      <input type="text" id="sectDaoCompanion" placeholder="Nhập tên đạo lữ">
+      <label for="sectDaoCompanionDescription">Mô tả đạo lữ</label>
+      <textarea class="sect-person-description" id="sectDaoCompanionDescription" rows="2" placeholder="Tính cách, vai trò, mối quan hệ..."></textarea>
+      <label for="sectDescription">Mô tả tông môn</label>
+      <textarea id="sectDescription" rows="6" placeholder="Ghi lại lịch sử, quy củ, thế lực và những điều đặc biệt của tông môn..."></textarea>
+      <button class="ghost" id="saveSect" style="margin-top:10px;">Lưu thông tin tông môn</button>
+      <div class="setup-note" id="sectFormStatus" role="status" aria-live="polite"></div>
+      <div class="row">
+        <button class="ghost" id="leaveSect">Rời khỏi tông môn</button>
+        <button class="ghost" id="expelSect">Bị trục xuất khỏi sư môn</button>
+      </div>
+    </div>
+  </div>
+
   <div class="panel" id="panel-caidat">
     <div class="card">
       <h3 class="serif" style="margin-top:0;">Mục Tiêu Tu Luyện</h3>
@@ -269,6 +333,18 @@
   <button class="avatar-lightbox-close" id="avatarLightboxClose" aria-label="Đóng ảnh">×</button>
   <img id="avatarLightboxImg" alt="Ảnh đại diện phóng to">
 </div>
+
+<dialog id="textareaEditor" class="textarea-editor" aria-labelledby="textareaEditorTitle">
+  <div class="textarea-editor-header">
+    <h2 class="serif" id="textareaEditorTitle">Chỉnh sửa nội dung</h2>
+    <button class="ghost" id="closeTextareaEditor" type="button">Đóng</button>
+  </div>
+  <textarea id="textareaEditorInput" class="textarea-editor-input" aria-label="Nội dung cần chỉnh sửa"></textarea>
+  <div class="row textarea-editor-actions">
+    <button class="ghost" id="cancelTextareaEditor" type="button">Hủy</button>
+    <button class="primary" id="applyTextareaEditor" type="button">Áp dụng</button>
+  </div>
+</dialog>
 
 <script src="app.js"></script>
 </body>

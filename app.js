@@ -152,7 +152,82 @@ const LEGENDS_KEY = "congphap_legends";
 const LEGENDS_API_URL = "/api/legends";
 let USE_API = false; // becomes true once /api/db (server.js + db.json) is confirmed reachable
 let legends = {};
+const SECT_RELATIONS = [
+  { key: "master", inputId: "sectMaster" },
+  { key: "shizun", inputId: "sectShizun" },
+  { key: "seniorSister", inputId: "sectSeniorSister" },
+  { key: "juniorSister", inputId: "sectJuniorSister" },
+  { key: "seniorBrother", inputId: "sectSeniorBrother" },
+  { key: "juniorBrother", inputId: "sectJuniorBrother" },
+  { key: "daoCompanion", inputId: "sectDaoCompanion" },
+];
 
+function defaultSect() {
+  return {
+    status: "unaffiliated",
+    name: "",
+    master: "",
+    shizun: "",
+    seniorSister: "",
+    juniorSister: "",
+    seniorBrother: "",
+    juniorBrother: "",
+    daoCompanion: "",
+    description: "",
+    masterDescription: "",
+    shizunDescription: "",
+    seniorSisterDescription: "",
+    juniorSisterDescription: "",
+    seniorBrotherDescription: "",
+    juniorBrotherDescription: "",
+    daoCompanionDescription: "",
+  };
+}
+function normalizeSect(sect) {
+  const defaults = defaultSect();
+  sect = sect || {};
+  const normalized = {
+    ...defaults,
+    status: ["joined", "left", "expelled"].includes(sect.status)
+      ? sect.status
+      : defaults.status,
+    name: typeof sect.name === "string" ? sect.name : defaults.name,
+    master: typeof sect.master === "string" ? sect.master : defaults.master,
+    shizun: typeof sect.shizun === "string" ? sect.shizun : defaults.shizun,
+    seniorSister:
+      typeof sect.seniorSister === "string"
+        ? sect.seniorSister
+        : defaults.seniorSister,
+    juniorSister:
+      typeof sect.juniorSister === "string"
+        ? sect.juniorSister
+        : defaults.juniorSister,
+    seniorBrother:
+      typeof sect.seniorBrother === "string"
+        ? sect.seniorBrother
+        : defaults.seniorBrother,
+    juniorBrother:
+      typeof sect.juniorBrother === "string"
+        ? sect.juniorBrother
+        : defaults.juniorBrother,
+    daoCompanion:
+      typeof sect.daoCompanion === "string"
+        ? sect.daoCompanion
+        : defaults.daoCompanion,
+    description:
+      typeof sect.description === "string"
+        ? sect.description
+        : defaults.description,
+  };
+  SECT_RELATIONS.forEach(({ key }) => {
+    const descriptionKey = `${key}Description`;
+    normalized[descriptionKey] =
+      typeof sect[descriptionKey] === "string"
+        ? sect[descriptionKey]
+        : defaults[descriptionKey];
+  });
+  return normalized;
+}
 function defaultDB() {
   return {
     player: { name: "", dailyTarget: 1 },
@@ -163,6 +238,7 @@ function defaultDB() {
       artifacts: "",
       elixirs: "",
     },
+    sect: defaultSect(),
   };
 }
 function normalizeDB(d) {
@@ -181,6 +257,7 @@ function normalizeDB(d) {
     artifacts: inventory.artifacts || "",
     elixirs: inventory.elixirs || "",
   };
+  d.sect = normalizeSect(d.sect);
   return d;
 }
 function loadDBFromLocalStorage() {
@@ -312,6 +389,46 @@ document.querySelectorAll(".tab").forEach((t) => {
   };
 });
 
+const textareaEditor = document.getElementById("textareaEditor");
+const textareaEditorInput = document.getElementById("textareaEditorInput");
+let textareaBeingEdited = null;
+
+document.addEventListener("click", (event) => {
+  const textarea = event.target.closest("textarea");
+  if (!textarea || textareaEditor.contains(textarea)) return;
+
+  textareaBeingEdited = textarea;
+  textareaEditorInput.value = textarea.value;
+  textareaEditorInput.classList.toggle("code-editor", textarea.id === "codeInput");
+  document.getElementById("textareaEditorTitle").textContent =
+    textarea.dataset.editorTitle ||
+    textarea.labels?.[0]?.textContent.trim() ||
+    textarea.closest(".card")?.querySelector("h3, h4")?.textContent.trim() ||
+    "Chỉnh sửa nội dung";
+  textareaEditor.showModal();
+  textareaEditorInput.focus();
+});
+
+function closeTextareaEditor(applyChanges) {
+  if (!textareaBeingEdited) return;
+  const target = textareaBeingEdited;
+  if (applyChanges) {
+    target.value = textareaEditorInput.value;
+    target.dispatchEvent(new Event("input", { bubbles: true }));
+    target.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  textareaBeingEdited = null;
+  textareaEditor.close();
+  target.focus({ preventScroll: true });
+}
+
+document.getElementById("applyTextareaEditor").onclick = () =>
+  closeTextareaEditor(true);
+document.getElementById("cancelTextareaEditor").onclick = () =>
+  closeTextareaEditor(false);
+document.getElementById("closeTextareaEditor").onclick = () =>
+  closeTextareaEditor(false);
+
 document.getElementById("saveTarget").onclick = () => {
   const v = parseInt(document.getElementById("dailyTarget").value) || 1;
   db.player.dailyTarget = v;
@@ -346,6 +463,86 @@ document.getElementById("saveInventory").onclick = () => {
   document.getElementById("inventoryStatus").textContent =
     "Nhẫn trữ vật đã được lưu.";
 };
+
+function renderSect() {
+  const sect = db.sect;
+  const isJoined = sect.status === "joined";
+  const sectName = sect.name.trim() || "tông môn";
+  const status = document.getElementById("sectStatus");
+  if (sect.status === "joined") {
+    status.textContent = `Đang bái nhập ${sectName}.`;
+  } else if (sect.status === "left") {
+    status.textContent = `Đã rời khỏi ${sectName}.`;
+  } else if (sect.status === "expelled") {
+    status.textContent = `Đã bị trục xuất khỏi ${sectName}.`;
+  } else {
+    status.textContent = "Chưa bái nhập tông môn.";
+  }
+  status.className = `today-status ${isJoined ? "ok" : "warn"}`;
+
+  const joinButton = document.getElementById("joinSect");
+  joinButton.style.display = isJoined ? "none" : "inline-block";
+  joinButton.textContent =
+    sect.status === "unaffiliated" ? "Bái nhập tông môn" : "Bái nhập tông môn mới";
+  document.getElementById("sectDetails").style.display = isJoined
+    ? "block"
+    : "none";
+
+  document.getElementById("sectName").value = sect.name;
+  SECT_RELATIONS.forEach(({ key, inputId }) => {
+    document.getElementById(inputId).value = sect[key];
+    document.getElementById(`${inputId}Description`).value =
+      sect[`${key}Description`];
+  });
+  document.getElementById("sectDescription").value = sect.description;
+}
+
+function readSectForm() {
+  const sect = {
+    status: "joined",
+    name: document.getElementById("sectName").value.trim(),
+    description: document.getElementById("sectDescription").value,
+  };
+  SECT_RELATIONS.forEach(({ key, inputId }) => {
+    sect[key] = document.getElementById(inputId).value.trim();
+    sect[`${key}Description`] =
+      document.getElementById(`${inputId}Description`).value;
+  });
+  return sect;
+}
+
+document.getElementById("joinSect").onclick = () => {
+  db.sect.status = "joined";
+  saveDB(db);
+  renderSect();
+  document.getElementById("sectFormStatus").textContent =
+    "Hồ sơ tông môn đã sẵn sàng để điền.";
+};
+
+document.getElementById("saveSect").onclick = () => {
+  db.sect = readSectForm();
+  saveDB(db);
+  document.getElementById("sectStatus").textContent =
+    `Đang bái nhập ${db.sect.name || "tông môn"}.`;
+  document.getElementById("sectFormStatus").textContent =
+    "Thông tin tông môn đã được lưu.";
+};
+
+function endSectMembership(status) {
+  const message =
+    status === "left"
+      ? "Xác nhận rời khỏi tông môn?"
+      : "Xác nhận nhân vật bị trục xuất khỏi sư môn?";
+  if (!confirm(message)) return;
+  db.sect = { ...readSectForm(), status };
+  saveDB(db);
+  renderSect();
+}
+
+document.getElementById("leaveSect").onclick = () =>
+  endSectMembership("left");
+document.getElementById("expelSect").onclick = () =>
+  endSectMembership("expelled");
 
 document.getElementById("saveTotalGoal").onclick = () => {
   const v = Math.max(
@@ -808,6 +1005,7 @@ function renderLegends() {
       : `Cần ${realm.min} chiêu thức để khai mở chương này.`;
     const textarea = document.createElement("textarea");
     textarea.className = "legend-text";
+    textarea.dataset.editorTitle = title.textContent;
     textarea.placeholder = unlocked
       ? "Viết giai thoại về lần đột phá cảnh giới này..."
       : "Chương truyện còn phong ấn.";
@@ -837,6 +1035,7 @@ function renderAll() {
   renderRoadmap();
   renderLegends();
   renderInventory();
+  renderSect();
 }
 
 (async function init() {
