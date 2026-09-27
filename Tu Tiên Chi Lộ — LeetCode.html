@@ -1,0 +1,244 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tu Tiên Chi Lộ — LeetCode</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="bgLayer"></div>
+<div class="app">
+  <div class="header">
+    <div>
+      <h1 id="playerNameDisplay" class="serif">Tu Tiên Chi Lộ</h1>
+      <div class="player-line"><span id="nameSpan" class="danh-xung">?</span><span id="titleSpan" class="danh-xung"></span></div>
+    </div>
+    <button class="ghost" id="renameBtn">Đổi đạo hiệu</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="tuluyen">Tu Luyện</button>
+    <button class="tab" data-tab="congphap">Công Pháp</button>
+    <button class="tab" data-tab="lich">Lịch Tu Tập</button>
+    <button class="tab" data-tab="lotrinh">Lộ Trình Vấn Đạo</button>
+    <button class="tab" data-tab="truyenky">Truyền Kỳ</button>
+    <button class="tab" data-tab="caidat">Thiết Lập Thiên Đạo</button>
+  </div>
+
+  <div class="panel active" id="panel-tuluyen">
+    <div class="grid2">
+      <div class="card realm-badge">
+        <div class="avatar-holder" id="avatarHolder"><img id="avatarImg" alt="" style="display:none;"></div>
+        <div>
+          <div class="realm-name" id="realmOverall">Phàm Nhân</div>
+          <div style="color:var(--text-dim);font-size:.82rem;" id="totalCount">0 chiêu thức đã lĩnh ngộ</div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:.85rem;color:var(--text-dim);">Tu luyện hôm nay</div>
+        <div id="todayStatus" class="today-status warn">Hôm nay đạo hữu chưa tu luyện. Hãy luyện chiêu thức!</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:.85rem;color:var(--text-dim);">Đại nguyện tu tiên</div>
+      <div class="setup-note" id="goalDistNote"></div>
+      <div class="cp-row" style="margin-top:10px;"><span id="goalProgressLabel">0 / 150</span><span id="goalProgressPct">0%</span></div>
+      <div class="bar"><div class="bar-fill" id="goalProgressBar" style="width:0%"></div></div>
+    </div>
+
+    <div class="card">
+      <h3 class="serif" style="margin-top:0;">Lĩnh Ngộ Chiêu Thức Mới</h3>
+      <div class="row">
+        <div>
+          <label>Công pháp (chủ đề)</label>
+          <select id="cpSelect"></select>
+        </div>
+        <div>
+          <label>Ngôn ngữ luyện công</label>
+          <select id="langSelect">
+            <option value="python3">Python 3</option>
+            <option value="javascript">JavaScript</option>
+            <option value="typescript">TypeScript</option>
+          </select>
+        </div>
+      </div>
+      <label>Tên chiêu thức (tên bài LeetCode) — bắt buộc</label>
+      <input type="text" id="chieuThucInput" placeholder="Vd: Two Sum">
+      <label>Khẩu quyết vận công (dán code giải vào đây) — bắt buộc, để tránh tẩu hỏa nhập ma (gian lận)</label>
+      <textarea id="codeInput" placeholder="def solve(...):
+    ..."></textarea>
+      <div class="err" id="formErr">Cần điền đủ tên chiêu thức và khẩu quyết trước khi đột phá cảnh giới.</div>
+      <button class="primary" id="submitBtn">Đột Phá Cảnh Giới</button>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-congphap">
+    <div class="card">
+      <h3 class="serif" style="margin-top:0;">Tiến Độ Các Công Pháp</h3>
+      <div id="cpProgressList"></div>
+    </div>
+    <div class="card">
+      <div class="search-row">
+        <input type="text" id="searchInput" placeholder="Tìm theo tên chiêu thức...">
+        <select id="filterCp"><option value="">Tất cả công pháp</option></select>
+      </div>
+      <table>
+        <thead><tr><th>Chiêu thức</th><th>Công pháp</th><th>Ngôn ngữ</th><th>Ngày luyện</th></tr></thead>
+        <tbody id="tblBody"></tbody>
+      </table>
+      <div class="empty" id="tblEmpty" style="display:none;">Chưa có chiêu thức nào khớp tìm kiếm.</div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-lich">
+    <div class="grid2">
+      <div class="card">
+        <div style="color:var(--text-dim);font-size:.85rem;">Chuỗi ngày liên tục</div>
+        <div class="streak" id="streakVal">0</div>
+        <div style="color:var(--text-dim);font-size:.8rem;">ngày tu luyện không gián đoạn</div>
+      </div>
+      <div class="card">
+        <div style="color:var(--text-dim);font-size:.85rem;margin-bottom:8px;">30 ngày gần nhất</div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="setup-note">Dữ liệu được lưu trong db.json và truyenky.json. Muốn tu luyện lại từ đầu, bấm nút bên dưới để xóa toàn bộ tiến độ và bắt đầu một kiếp tu tiên mới.</div>
+      <button class="ghost" id="resetBtn" style="margin-top:10px;color:#e08c85;border-color:var(--danger);">Chuyển kiếp (xóa toàn bộ dữ liệu)</button>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-lotrinh">
+    <div class="card">
+      <h3 class="serif" style="margin-top:0;">Cảnh Giới Tu Vi</h3>
+      <div style="color:var(--text-dim);font-size:.82rem;margin-bottom:12px;">Cảnh giới tổng thể tính trên tổng số chiêu thức đã giải trên toàn bộ các công pháp, so với đại nguyện đã đặt.</div>
+      <div class="today-status ok" id="goalRealmNote" style="margin-bottom:12px;"></div>
+      <table>
+        <thead><tr><th>Cảnh giới</th><th>Tổng chiêu thức cần</th></tr></thead>
+        <tbody id="realmTableBody"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3 class="serif" style="margin-top:0;">Danh Xưng Tu Sĩ</h3>
+      <div style="color:var(--text-dim);font-size:.82rem;margin-bottom:12px;">Danh xưng tính theo tổng số chiêu thức đã lĩnh ngộ trên toàn bộ các công pháp.</div>
+      <div class="today-status ok" id="goalTitleNote" style="margin-bottom:12px;"></div>
+      <table>
+        <thead><tr><th>Danh xưng</th><th>Tổng chiêu thức cần</th></tr></thead>
+        <tbody id="titleTableBody"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3 class="serif" style="margin-top:0;">Mục Tiêu Riêng Từng Công Pháp</h3>
+      <div style="color:var(--text-dim);font-size:.82rem;margin-bottom:12px;">Đại nguyện được chia đều cho 15 công pháp — mỗi công pháp có cảnh giới riêng dựa trên số chiêu thức đã giải trong chính công pháp đó (xem tab Công Pháp).</div>
+      <div id="perTopicNote" class="today-status ok"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-truyenky">
+    <div class="card">
+      <h3 class="serif" style="margin-top:0;">Truyền Kỳ Tu Tiên</h3>
+      <div class="setup-note">Mỗi cảnh giới mở ra một chương mới trong hành trình của đạo hữu. Hãy viết lại một đoạn truyện về nhân vật khi cảnh giới đó được khai mở.</div>
+    </div>
+    <div id="legendList"></div>
+  </div>
+
+  <div class="panel" id="panel-caidat">
+    <div class="card">
+      <h3 class="serif" style="margin-top:0;">Mục Tiêu Tu Luyện</h3>
+      <label>Mục tiêu tu luyện mỗi ngày (chiêu thức)</label>
+      <div class="row">
+        <input type="number" id="dailyTarget" min="1" value="1" style="max-width:100px;">
+        <button class="ghost" id="saveTarget">Lưu mục tiêu ngày</button>
+      </div>
+      <label>Đại nguyện tu tiên — tổng số chiêu thức muốn viên mãn</label>
+      <div class="row">
+        <input type="number" id="totalGoal" min="1" value="150" style="max-width:120px;">
+        <button class="ghost" id="saveTotalGoal">Lưu đại nguyện</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="serif" style="margin-top:0;">Diện Mạo Đạo Hữu</h3>
+      <label>Đường dẫn ảnh đại diện (avatar)</label>
+      <input type="text" id="avatarUrlInput" placeholder="https://...">
+      <div class="avatar-crop-controls">
+        <label>Thu phóng ảnh — <span id="avatarZoomVal">100%</span></label>
+        <input type="range" id="avatarZoomInput" min="1" max="2.5" step="0.05" value="1">
+        <div class="row">
+          <div>
+            <label>Vị trí ngang — <span id="avatarXVal">50%</span></label>
+            <input type="range" id="avatarXInput" min="0" max="100" step="1" value="50">
+          </div>
+          <div>
+            <label>Vị trí dọc — <span id="avatarYVal">50%</span></label>
+            <input type="range" id="avatarYInput" min="0" max="100" step="1" value="50">
+          </div>
+        </div>
+        <div class="avatar-preview-row">
+          <span class="legend-status">Xem trước</span>
+          <div class="avatar-holder avatar-preview" id="avatarPreview"><img id="avatarPreviewImg" alt="" style="display:none;"></div>
+        </div>
+      </div>
+      <button class="ghost" id="saveAvatar" style="margin-top:10px;">Lưu avatar</button>
+      <div class="setup-note">Điều chỉnh thu phóng và vị trí để cắt ảnh vừa khung avatar.</div>
+    </div>
+
+    <div class="card">
+      <h3 class="serif" style="margin-top:0;">Bối Cảnh Tu Luyện</h3>
+      <label>Đường dẫn ảnh nền (background)</label>
+      <input type="text" id="bgImageInput" placeholder="https://...">
+      <label>Độ mờ ảnh nền — <span id="bgOpacityVal">35%</span></label>
+      <input type="range" id="bgOpacityInput" min="0" max="1" step="0.05" value="0.35">
+      <button class="ghost" id="saveBg" style="margin-top:10px;">Lưu bối cảnh</button>
+      <div class="setup-note">Để trống đường dẫn nếu không muốn dùng ảnh nền.</div>
+    </div>
+
+    <div class="card">
+      <h3 class="serif" style="margin-top:0;">Bảng Màu Thiên Đạo</h3>
+      <div class="row">
+        <div>
+          <label>Màu chủ đạo (vàng kim)</label>
+          <input type="color" id="colorGold" value="#D4AF37">
+        </div>
+        <div>
+          <label>Màu phụ (ngọc bích)</label>
+          <input type="color" id="colorJade" value="#4A9C6D">
+        </div>
+        <div>
+          <label>Nền chính</label>
+          <input type="color" id="colorBg" value="#0B0E1A">
+        </div>
+        <div>
+          <label>Nền thẻ / tab</label>
+          <input type="color" id="colorPanel" value="#151C33">
+        </div>
+        <div>
+          <label>Độ trong suốt nền thẻ / tab — <span id="panelOpacityVal">92%</span></label>
+          <input type="range" id="panelOpacityInput" min="0.1" max="1" step="0.05" value="0.92">
+        </div>
+        <div>
+          <label>Màu chữ</label>
+          <input type="color" id="colorText" value="#EDE4D3">
+        </div>
+      </div>
+      <div class="row" style="margin-top:14px;">
+        <button class="primary" id="saveColors" style="margin-top:0;">Lưu bảng màu</button>
+        <button class="ghost" id="resetColors">Khôi phục màu mặc định</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="avatarLightbox" class="avatar-lightbox" role="dialog" aria-modal="true" aria-label="Xem ảnh đại diện">
+  <button class="avatar-lightbox-close" id="avatarLightboxClose" aria-label="Đóng ảnh">×</button>
+  <img id="avatarLightboxImg" alt="Ảnh đại diện phóng to">
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
+

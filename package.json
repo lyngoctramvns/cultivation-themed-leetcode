@@ -1,0 +1,9 @@
+{
+  "name": "tu-tien-chi-lo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local server for Tu Tien Chi Lo — LeetCode tracker, persists data to db.json",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
