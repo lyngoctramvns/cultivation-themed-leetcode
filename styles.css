@@ -361,6 +361,12 @@ textarea {
   flex: 1;
   min-width: 160px;
 }
+.image-link-row {
+  align-items: flex-end;
+}
+.image-link-row > div {
+  min-width: 0;
+}
 button.primary {
   background: var(--gold);
   color: #181205;

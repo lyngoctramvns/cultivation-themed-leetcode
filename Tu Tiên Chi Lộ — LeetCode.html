@@ -259,8 +259,16 @@
 
     <div class="card">
       <h3 class="serif" style="margin-top:0;">Diện Mạo Đạo Hữu</h3>
-      <label>Đường dẫn ảnh đại diện (avatar)</label>
-      <input type="text" id="avatarUrlInput" placeholder="https://...">
+      <label for="avatarLinkSelect">Ảnh đại diện đang dùng</label>
+      <div class="row image-link-row">
+        <div><select id="avatarLinkSelect"></select></div>
+        <button class="ghost" id="removeAvatarLink" type="button">Xóa link đã chọn</button>
+      </div>
+      <label for="avatarUrlInput">Thêm link ảnh đại diện</label>
+      <div class="row image-link-row">
+        <div><input type="text" id="avatarUrlInput" placeholder="https://..."></div>
+        <button class="ghost" id="addAvatarLink" type="button">Thêm và chọn</button>
+      </div>
       <div class="avatar-crop-controls">
         <label>Thu phóng ảnh — <span id="avatarZoomVal">100%</span></label>
         <input type="range" id="avatarZoomInput" min="1" max="2.5" step="0.05" value="1">
@@ -285,8 +293,16 @@
 
     <div class="card">
       <h3 class="serif" style="margin-top:0;">Bối Cảnh Tu Luyện</h3>
-      <label>Đường dẫn ảnh nền (background)</label>
-      <input type="text" id="bgImageInput" placeholder="https://...">
+      <label for="bgImageLinkSelect">Ảnh nền đang dùng</label>
+      <div class="row image-link-row">
+        <div><select id="bgImageLinkSelect"></select></div>
+        <button class="ghost" id="removeBgImageLink" type="button">Xóa link đã chọn</button>
+      </div>
+      <label for="bgImageInput">Thêm link ảnh nền</label>
+      <div class="row image-link-row">
+        <div><input type="text" id="bgImageInput" placeholder="https://..."></div>
+        <button class="ghost" id="addBgImageLink" type="button">Thêm và chọn</button>
+      </div>
       <label>Độ mờ ảnh nền — <span id="bgOpacityVal">35%</span></label>
       <input type="range" id="bgOpacityInput" min="0" max="1" step="0.05" value="0.35">
       <button class="ghost" id="saveBg" style="margin-top:10px;">Lưu bối cảnh</button>

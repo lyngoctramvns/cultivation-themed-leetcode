@@ -628,8 +628,7 @@ function applyCropToImage(img, crop) {
 function updateAvatarPreview() {
   const holder = document.getElementById("avatarPreview");
   const img = document.getElementById("avatarPreviewImg");
-  const input = document.getElementById("avatarUrlInput");
-  const url = input.value.trim();
+  const url = document.getElementById("avatarLinkSelect").value;
   applyCropToImage(img, {
     zoom: parseFloat(document.getElementById("avatarZoomInput").value),
     x: parseInt(document.getElementById("avatarXInput").value, 10),
@@ -670,8 +669,81 @@ function hexToRgba(hex, opacity) {
   const blue = parseInt(full.slice(4, 6), 16);
   return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
 }
+function getSavedImageLinks(listKey, selectedKey) {
+  const links = Array.isArray(db.settings[listKey])
+    ? db.settings[listKey]
+        .filter((url) => typeof url === "string" && url.trim())
+        .map((url) => url.trim())
+    : [];
+  const selected =
+    typeof db.settings[selectedKey] === "string"
+      ? db.settings[selectedKey].trim()
+      : "";
+  if (selected && !links.includes(selected)) links.unshift(selected);
+  db.settings[listKey] = [...new Set(links)];
+  db.settings[selectedKey] = selected;
+  return db.settings[listKey];
+}
+function renderImageLinkSelect(selectId, removeButtonId, listKey, selectedKey, emptyLabel) {
+  const select = document.getElementById(selectId);
+  const links = getSavedImageLinks(listKey, selectedKey);
+  select.replaceChildren();
+  const emptyOption = document.createElement("option");
+  emptyOption.value = "";
+  emptyOption.textContent = emptyLabel;
+  select.appendChild(emptyOption);
+  links.forEach((url, index) => {
+    const option = document.createElement("option");
+    option.value = url;
+    option.textContent = `${index + 1}. ${url}`;
+    select.appendChild(option);
+  });
+  select.value = db.settings[selectedKey];
+  document.getElementById(removeButtonId).disabled = !select.value;
+}
+function renderImageLinkSelects() {
+  renderImageLinkSelect(
+    "avatarLinkSelect",
+    "removeAvatarLink",
+    "avatarLinks",
+    "avatarUrl",
+    "Chưa có ảnh đại diện",
+  );
+  renderImageLinkSelect(
+    "bgImageLinkSelect",
+    "removeBgImageLink",
+    "bgImageLinks",
+    "bgImage",
+    "Chưa có ảnh nền",
+  );
+}
+function addImageLink(inputId, listKey, selectedKey, updateImage) {
+  const input = document.getElementById(inputId);
+  const url = input.value.trim();
+  if (!url) return;
+  const links = getSavedImageLinks(listKey, selectedKey);
+  if (!links.includes(url)) links.push(url);
+  db.settings[listKey] = links;
+  db.settings[selectedKey] = url;
+  input.value = "";
+  renderImageLinkSelects();
+  saveDB(db);
+  updateImage();
+}
+function removeSelectedImageLink(listKey, selectedKey, updateImage) {
+  const selected = db.settings[selectedKey];
+  if (!selected) return;
+  db.settings[listKey] = getSavedImageLinks(listKey, selectedKey).filter(
+    (url) => url !== selected,
+  );
+  db.settings[selectedKey] = db.settings[listKey][0] || "";
+  renderImageLinkSelects();
+  saveDB(db);
+  updateImage();
+}
 function populateSettingsExtras() {
-  document.getElementById("avatarUrlInput").value = db.settings.avatarUrl || "";
+  renderImageLinkSelects();
+  document.getElementById("avatarUrlInput").value = "";
   const crop = getAvatarCrop();
   document.getElementById("avatarZoomInput").value = crop.zoom;
   document.getElementById("avatarZoomVal").textContent =
@@ -680,7 +752,7 @@ function populateSettingsExtras() {
   document.getElementById("avatarXVal").textContent = crop.x + "%";
   document.getElementById("avatarYInput").value = crop.y;
   document.getElementById("avatarYVal").textContent = crop.y + "%";
-  document.getElementById("bgImageInput").value = db.settings.bgImage || "";
+  document.getElementById("bgImageInput").value = "";
   const op = db.settings.bgOpacity != null ? db.settings.bgOpacity : 0.35;
   document.getElementById("bgOpacityInput").value = op;
   document.getElementById("bgOpacityVal").textContent =
@@ -699,9 +771,6 @@ function populateSettingsExtras() {
 }
 
 document.getElementById("saveAvatar").onclick = () => {
-  db.settings.avatarUrl = document
-    .getElementById("avatarUrlInput")
-    .value.trim();
   db.settings.avatarCrop = {
     zoom: parseFloat(document.getElementById("avatarZoomInput").value),
     x: parseInt(document.getElementById("avatarXInput").value, 10),
@@ -723,7 +792,24 @@ document.getElementById("avatarYInput").oninput = (e) => {
   document.getElementById("avatarYVal").textContent = e.target.value + "%";
   applyAvatarCropFromControls();
 };
-document.getElementById("avatarUrlInput").oninput = updateAvatarPreview;
+document.getElementById("avatarLinkSelect").onchange = () => {
+  db.settings.avatarUrl = document.getElementById("avatarLinkSelect").value;
+  saveDB(db);
+  applyAvatar();
+};
+document.getElementById("addAvatarLink").onclick = () =>
+  addImageLink("avatarUrlInput", "avatarLinks", "avatarUrl", applyAvatar);
+document.getElementById("removeAvatarLink").onclick = () =>
+  removeSelectedImageLink("avatarLinks", "avatarUrl", applyAvatar);
+document.getElementById("bgImageLinkSelect").onchange = () => {
+  db.settings.bgImage = document.getElementById("bgImageLinkSelect").value;
+  saveDB(db);
+  applyBackground();
+};
+document.getElementById("addBgImageLink").onclick = () =>
+  addImageLink("bgImageInput", "bgImageLinks", "bgImage", applyBackground);
+document.getElementById("removeBgImageLink").onclick = () =>
+  removeSelectedImageLink("bgImageLinks", "bgImage", applyBackground);
 function applyAvatarCropFromControls() {
   applyAvatarCrop({
     zoom: parseFloat(document.getElementById("avatarZoomInput").value),
@@ -741,7 +827,7 @@ document.getElementById("panelOpacityInput").oninput = (e) => {
     Math.round(e.target.value * 100) + "%";
 };
 document.getElementById("saveBg").onclick = () => {
-  db.settings.bgImage = document.getElementById("bgImageInput").value.trim();
+  db.settings.bgImage = document.getElementById("bgImageLinkSelect").value;
   db.settings.bgOpacity =
     parseFloat(document.getElementById("bgOpacityInput").value) || 0;
   saveDB(db);

@@ -44,7 +44,7 @@ You can open `Tu Tiên Chi Lộ — LeetCode.html` directly in a browser. In thi
 - Use the **Tông Môn** tab, shown before **Tu Luyện**, to create a sect profile. It starts at “Chưa bái nhập” and lets the player enter a sect name, each relationship's name and description (master, shizun, senior and junior fellow disciples, and dao companion), and a freeform sect description.
 - Record joining, leaving, or expulsion from a sect. Leaving or expulsion preserves the profile for the character's story.
 - Click any text area to edit its contents in a larger pop-up, then apply or cancel the change.
-- Customize the avatar, background image, interface colors, and panel opacity.
+- Save multiple avatar and background links, choose the active image, and customize avatar cropping, interface colors, and panel opacity.
 
 ## Quick Usage Guide
 
