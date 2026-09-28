@@ -6,8 +6,10 @@ ENV NODE_ENV=production \
 
 WORKDIR /app
 COPY --chown=node:node . /app
-RUN mkdir -p /data && chown node:node /data
-COPY --chown=node:node db.json truyenky.json /data/
+RUN mkdir -p /data \
+    && printf '{"player":{"name":"","dailyTarget":1},"problems":[],"settings":{}}\n' > /data/db.json \
+    && printf '{}\n' > /data/truyenky.json \
+    && chown -R node:node /data
 
 USER node
 EXPOSE 3000
