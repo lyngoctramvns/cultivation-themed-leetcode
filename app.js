@@ -348,17 +348,53 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function ensureName() {
+const nameDialog = document.getElementById("nameDialog");
+const nameDialogInput = document.getElementById("nameDialogInput");
+const nameDialogError = document.getElementById("nameDialogError");
+
+function requestPlayerName(title, initialValue) {
+  document.getElementById("nameDialogTitle").textContent = title;
+  nameDialogInput.value = initialValue;
+  nameDialogError.style.display = "none";
+  nameDialog.returnValue = "";
+  const closed = new Promise((resolve) => {
+    nameDialog.addEventListener(
+      "close",
+      () => resolve(nameDialog.returnValue === "save" ? nameDialogInput.value.trim() : null),
+      { once: true },
+    );
+  });
+  nameDialog.showModal();
+  nameDialogInput.focus();
+  nameDialogInput.select();
+  return closed;
+}
+
+document.getElementById("nameDialogForm").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = nameDialogInput.value.trim();
+  if (!name) {
+    nameDialogError.style.display = "block";
+    nameDialogInput.focus();
+    return;
+  }
+  nameDialog.close("save");
+});
+
+document.getElementById("cancelNameDialog").onclick = () =>
+  nameDialog.close("cancel");
+
+async function ensureName() {
   if (!db.player.name) {
-    const n = prompt("Đạo hiệu của đạo hữu là gì?", "");
-    db.player.name = n && n.trim() ? n.trim() : "Vô Danh";
+    const name = await requestPlayerName("Chọn đạo hiệu", "");
+    db.player.name = name || "Vô Danh";
     saveDB(db);
   }
 }
-document.getElementById("renameBtn").onclick = () => {
-  const n = prompt("Đổi đạo hiệu:", db.player.name || "");
-  if (n && n.trim()) {
-    db.player.name = n.trim();
+document.getElementById("renameBtn").onclick = async () => {
+  const name = await requestPlayerName("Đổi đạo hiệu", db.player.name || "");
+  if (name) {
+    db.player.name = name;
     saveDB(db);
     renderAll();
   }
@@ -376,16 +412,281 @@ function populateSelects() {
   });
 }
 
+const tabNavigation = document.querySelector(".tabs");
+const mobileNavToggle = document.querySelector(".mobile-nav-toggle");
+const mobileNavCurrent = document.querySelector(".mobile-nav-current");
+
+function closeMobileNav(restoreFocus = false) {
+  tabNavigation.classList.remove("open");
+  mobileNavToggle.setAttribute("aria-expanded", "false");
+  if (restoreFocus) mobileNavToggle.focus();
+}
+
+function updateMobileMenuSpace() {
+  const availableHeight =
+    window.innerHeight - mobileNavToggle.getBoundingClientRect().bottom - 12;
+  tabNavigation.style.setProperty(
+    "--mobile-menu-max-height",
+    `${Math.max(0, availableHeight)}px`,
+  );
+}
+
+const mobileSelectMedia = window.matchMedia("(max-width: 700px)");
+const mobileSelectMenu = document.createElement("div");
+const mobileSelectPickers = new Map();
+let activeMobileSelect = null;
+
+mobileSelectMenu.className = "mobile-select-menu";
+mobileSelectMenu.id = "mobileSelectMenu";
+mobileSelectMenu.setAttribute("role", "listbox");
+mobileSelectMenu.hidden = true;
+document.body.appendChild(mobileSelectMenu);
+
+function syncMobileSelectPicker(select) {
+  const picker = mobileSelectPickers.get(select);
+  if (!picker) return;
+  const selectedText = select.options[select.selectedIndex]?.textContent || "";
+  picker.value.textContent = selectedText;
+  picker.value.title = selectedText;
+  picker.trigger.setAttribute(
+    "aria-label",
+    picker.label ? `${picker.label}: ${selectedText}` : selectedText,
+  );
+  picker.trigger.disabled = select.disabled;
+}
+
+function positionMobileSelectMenu() {
+  if (!activeMobileSelect) return;
+  const picker = mobileSelectPickers.get(activeMobileSelect);
+  const rect = picker.trigger.getBoundingClientRect();
+  const viewportWidth = document.documentElement.clientWidth;
+  const viewportHeight = window.visualViewport?.height || window.innerHeight;
+  const menuHeight = Math.min(mobileSelectMenu.scrollHeight, 320);
+  const roomAbove = Math.max(0, rect.top - 8);
+  const roomBelow = Math.max(0, viewportHeight - rect.bottom - 8);
+  const openAbove = roomBelow < menuHeight && roomAbove > roomBelow;
+  const availableHeight = openAbove ? roomAbove : roomBelow;
+  const height = Math.min(menuHeight, availableHeight);
+  const width = Math.min(
+    Math.max(rect.width, Math.min(280, viewportWidth - 16)),
+    viewportWidth - 16,
+  );
+
+  mobileSelectMenu.style.maxHeight = `${height}px`;
+  mobileSelectMenu.style.width = `${width}px`;
+  mobileSelectMenu.style.left = `${Math.max(
+    8,
+    Math.min(rect.left, viewportWidth - width - 8),
+  )}px`;
+  mobileSelectMenu.style.top = openAbove
+    ? `${Math.max(8, rect.top - height - 4)}px`
+    : `${rect.bottom + 4}px`;
+}
+
+function closeMobileSelectPicker(restoreFocus = false) {
+  if (!activeMobileSelect) return;
+  const picker = mobileSelectPickers.get(activeMobileSelect);
+  picker.trigger.setAttribute("aria-expanded", "false");
+  mobileSelectMenu.hidden = true;
+  mobileSelectMenu.replaceChildren();
+  activeMobileSelect = null;
+  if (restoreFocus) picker.trigger.focus();
+}
+
+function openMobileSelectPicker(select) {
+  if (activeMobileSelect === select) {
+    closeMobileSelectPicker();
+    return;
+  }
+  closeMobileSelectPicker();
+  const picker = mobileSelectPickers.get(select);
+  syncMobileSelectPicker(select);
+  mobileSelectMenu.replaceChildren();
+  Array.from(select.options).forEach((option) => {
+    const item = document.createElement("div");
+    item.className = "mobile-select-option";
+    item.setAttribute("role", "option");
+    item.setAttribute("aria-selected", String(option.selected));
+    item.tabIndex = -1;
+    item.dataset.value = option.value;
+    item.textContent = option.textContent;
+    if (option.disabled) item.setAttribute("aria-disabled", "true");
+    mobileSelectMenu.appendChild(item);
+  });
+  activeMobileSelect = select;
+  picker.trigger.setAttribute("aria-expanded", "true");
+  mobileSelectMenu.hidden = false;
+  positionMobileSelectMenu();
+  const selected = mobileSelectMenu.querySelector('[aria-selected="true"]');
+  (selected || mobileSelectMenu.querySelector('[role="option"]'))?.focus();
+}
+
+function setupMobileSelectPickers() {
+  document.querySelectorAll("select").forEach((select) => {
+    const parent = select.parentElement;
+    const label = select.labels?.[0] || parent.querySelector("label");
+    const wrapper = document.createElement("div");
+    const trigger = document.createElement("button");
+    const value = document.createElement("span");
+    const accessibleLabel = label
+      ? label.textContent.trim()
+      : select.id === "filterCp"
+        ? "Lọc công pháp"
+        : "";
+    wrapper.className = "select-picker";
+    trigger.className = "select-picker-trigger";
+    value.className = "select-picker-value";
+    trigger.type = "button";
+    trigger.setAttribute("aria-haspopup", "listbox");
+    trigger.setAttribute("aria-expanded", "false");
+    trigger.setAttribute("aria-controls", mobileSelectMenu.id);
+    trigger.appendChild(value);
+    if (accessibleLabel) trigger.setAttribute("aria-label", accessibleLabel);
+
+    parent.insertBefore(wrapper, select);
+    wrapper.append(select, trigger);
+    mobileSelectPickers.set(select, { wrapper, trigger, value, label: accessibleLabel });
+    trigger.addEventListener("click", () => {
+      if (mobileSelectMedia.matches) openMobileSelectPicker(select);
+    });
+    trigger.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        openMobileSelectPicker(select);
+      }
+    });
+    select.addEventListener("change", () => syncMobileSelectPicker(select));
+    new MutationObserver(() => syncMobileSelectPicker(select)).observe(select, {
+      attributes: true,
+      childList: true,
+      characterData: true,
+      subtree: true,
+    });
+    syncMobileSelectPicker(select);
+  });
+  updateMobileSelectPresentation();
+}
+
+function updateMobileSelectPresentation() {
+  const isMobile = mobileSelectMedia.matches;
+  mobileSelectPickers.forEach(({ trigger }, select) => {
+    if (isMobile) {
+      select.setAttribute("aria-hidden", "true");
+      select.tabIndex = -1;
+    } else {
+      select.removeAttribute("aria-hidden");
+      select.removeAttribute("tabindex");
+    }
+    trigger.setAttribute("aria-hidden", String(!isMobile));
+    syncMobileSelectPicker(select);
+  });
+  if (!isMobile) closeMobileSelectPicker();
+}
+
+setupMobileSelectPickers();
+
+mobileNavToggle.addEventListener("click", () => {
+  const isOpen = tabNavigation.classList.toggle("open");
+  mobileNavToggle.setAttribute("aria-expanded", String(isOpen));
+  if (isOpen) updateMobileMenuSpace();
+});
+
+window.addEventListener("resize", () => {
+  if (tabNavigation.classList.contains("open")) updateMobileMenuSpace();
+  if (activeMobileSelect) positionMobileSelectMenu();
+});
+window.addEventListener("scroll", () => {
+  if (tabNavigation.classList.contains("open")) updateMobileMenuSpace();
+  if (activeMobileSelect) positionMobileSelectMenu();
+}, { passive: true });
+mobileSelectMedia.addEventListener("change", updateMobileSelectPresentation);
+window.visualViewport?.addEventListener("resize", positionMobileSelectMenu);
+window.visualViewport?.addEventListener("scroll", positionMobileSelectMenu);
+
+document.addEventListener("click", (event) => {
+  if (!tabNavigation.contains(event.target)) closeMobileNav();
+  if (
+    activeMobileSelect &&
+    !mobileSelectMenu.contains(event.target) &&
+    !mobileSelectPickers.get(activeMobileSelect).wrapper.contains(event.target)
+  ) {
+    closeMobileSelectPicker();
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && activeMobileSelect) {
+    closeMobileSelectPicker(true);
+    return;
+  }
+  if (event.key === "Escape" && tabNavigation.classList.contains("open")) {
+    closeMobileNav(true);
+  }
+});
+
+mobileSelectMenu.addEventListener("click", (event) => {
+  const item = event.target.closest("[role=option]");
+  if (!item || item.getAttribute("aria-disabled") === "true") return;
+  activeMobileSelect.value = item.dataset.value;
+  activeMobileSelect.dispatchEvent(new Event("change", { bubbles: true }));
+  closeMobileSelectPicker(true);
+});
+
+mobileSelectMenu.addEventListener("keydown", (event) => {
+  const items = Array.from(
+    mobileSelectMenu.querySelectorAll('[role="option"]:not([aria-disabled="true"])'),
+  );
+  const index = items.indexOf(document.activeElement);
+  let nextIndex = null;
+  if (event.key === "ArrowDown") nextIndex = Math.min(items.length - 1, index + 1);
+  if (event.key === "ArrowUp") nextIndex = Math.max(0, index - 1);
+  if (event.key === "Home") nextIndex = 0;
+  if (event.key === "End") nextIndex = items.length - 1;
+  if (nextIndex !== null && items.length) {
+    event.preventDefault();
+    items[nextIndex].focus();
+  } else if (
+    (event.key === "Enter" || event.key === " ") &&
+    document.activeElement.matches('[role="option"]')
+  ) {
+    event.preventDefault();
+    document.activeElement.click();
+  }
+});
+
+document.addEventListener("focusin", (event) => {
+  if (
+    activeMobileSelect &&
+    !mobileSelectMenu.contains(event.target) &&
+    !mobileSelectPickers.get(activeMobileSelect).trigger.contains(event.target)
+  ) {
+    closeMobileSelectPicker();
+  }
+});
+
+mobileSelectMenu.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeMobileSelectPicker(true);
+  }
+});
+
 document.querySelectorAll(".tab").forEach((t) => {
   t.onclick = () => {
     document
       .querySelectorAll(".tab")
-      .forEach((x) => x.classList.remove("active"));
+      .forEach((x) => {
+        x.classList.remove("active");
+        x.removeAttribute("aria-current");
+      });
     document
       .querySelectorAll(".panel")
       .forEach((x) => x.classList.remove("active"));
     t.classList.add("active");
+    t.setAttribute("aria-current", "page");
+    mobileNavCurrent.textContent = t.textContent;
     document.getElementById("panel-" + t.dataset.tab).classList.add("active");
+    closeMobileNav();
   };
 });
 
@@ -1127,7 +1428,7 @@ function renderAll() {
 (async function init() {
   [db, legends] = await Promise.all([loadDB(), loadLegends()]);
   populateSelects();
-  ensureName();
+  await ensureName();
   applyBackground();
   applyColors();
   applyAvatar();

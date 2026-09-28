@@ -26,6 +26,23 @@ To stop the app, return to the Terminal window and press `Ctrl + C`.
 
 > The project only uses Node.js built-in modules, so no additional packages need to be installed with `npm install`.
 
+### Deploy with Docker Compose on a Hostinger VPS
+
+Docker Compose requires a Hostinger VPS with Docker Engine and the Compose plugin; it is not supported by shared hosting plans.
+
+1. Upload or clone this project onto the VPS.
+2. From the project directory, run:
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+3. Allow inbound TCP port `3000` in the Hostinger VPS firewall, then open `http://<VPS-IP>:3000`.
+
+Set `APP_PORT` to publish a different host port, for example `APP_PORT=8080 docker compose up -d --build`. For a custom domain and HTTPS, configure a reverse proxy on the VPS to forward requests to port `3000`.
+
+The `app-data` Docker volume stores `db.json` and `truyenky.json`; it is initialized from the project files on first startup and survives container rebuilds. `docker compose down` keeps this data; `docker compose down -v` deletes it.
+
 ### Open the HTML file directly
 
 You can open `Tu Tiên Chi Lộ — LeetCode.html` directly in a browser. In this mode, the app stores data in the browser's `localStorage` instead of the JSON files. Some browsers may restrict features when opening a local file, so running the local server is more reliable.

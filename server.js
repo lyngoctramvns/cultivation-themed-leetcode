@@ -5,9 +5,10 @@ const path = require("path");
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
+const DATA_DIR = process.env.DATA_DIR || ROOT;
 const HTML_FILE = path.join(ROOT, "Tu Tiên Chi Lộ — LeetCode.html");
-const DB_FILE = path.join(ROOT, "db.json");
-const LEGENDS_FILE = path.join(ROOT, "truyenky.json");
+const DB_FILE = path.join(DATA_DIR, "db.json");
+const LEGENDS_FILE = path.join(DATA_DIR, "truyenky.json");
 const STATIC_FILES = {
   "/styles.css": {
     file: path.join(ROOT, "styles.css"),

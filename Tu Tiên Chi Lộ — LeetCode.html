@@ -19,16 +19,23 @@
     <button class="ghost" id="renameBtn">Đổi đạo hiệu</button>
   </div>
 
-  <div class="tabs">
-    <button class="tab" data-tab="tongmon">Tông Môn</button>
-    <button class="tab active" data-tab="tuluyen">Tu Luyện</button>
-    <button class="tab" data-tab="congphap">Công Pháp</button>
-    <button class="tab" data-tab="lich">Lịch Tu Tập</button>
-    <button class="tab" data-tab="lotrinh">Lộ Trình Vấn Đạo</button>
-    <button class="tab" data-tab="truyenky">Truyền Kỳ</button>
-    <button class="tab" data-tab="nhantruuvat">Nhẫn Trữ Vật</button>
-    <button class="tab" data-tab="caidat">Thiết Lập Thiên Đạo</button>
-  </div>
+  <nav class="tabs" aria-label="Điều hướng chính">
+    <button class="mobile-nav-toggle" type="button" aria-expanded="false" aria-controls="primaryTabs">
+      <span class="mobile-nav-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+      <span class="mobile-nav-current">Tu Luyện</span>
+      <span class="mobile-nav-chevron" aria-hidden="true"></span>
+    </button>
+    <div class="tab-menu" id="primaryTabs">
+      <button class="tab" data-tab="tongmon">Tông Môn</button>
+      <button class="tab active" data-tab="tuluyen" aria-current="page">Tu Luyện</button>
+      <button class="tab" data-tab="congphap">Công Pháp</button>
+      <button class="tab" data-tab="lich">Lịch Tu Tập</button>
+      <button class="tab" data-tab="lotrinh">Lộ Trình Vấn Đạo</button>
+      <button class="tab" data-tab="truyenky">Truyền Kỳ</button>
+      <button class="tab" data-tab="nhantruuvat">Nhẫn Trữ Vật</button>
+      <button class="tab" data-tab="caidat">Thiết Lập Thiên Đạo</button>
+    </div>
+  </nav>
 
   <div class="panel active" id="panel-tuluyen">
     <div class="grid2">
@@ -360,6 +367,21 @@
     <button class="ghost" id="cancelTextareaEditor" type="button">Hủy</button>
     <button class="primary" id="applyTextareaEditor" type="button">Áp dụng</button>
   </div>
+</dialog>
+
+<dialog id="nameDialog" class="textarea-editor name-dialog" aria-labelledby="nameDialogTitle">
+  <form id="nameDialogForm" novalidate>
+    <div class="textarea-editor-header">
+      <h2 class="serif" id="nameDialogTitle">Đổi đạo hiệu</h2>
+    </div>
+    <label for="nameDialogInput">Đạo hiệu mới</label>
+    <input type="text" id="nameDialogInput" maxlength="40" autocomplete="nickname">
+    <div class="err" id="nameDialogError" role="alert">Đạo hiệu không được để trống.</div>
+    <div class="row textarea-editor-actions">
+      <button class="ghost" id="cancelNameDialog" type="button">Hủy</button>
+      <button class="primary" type="submit">Lưu đạo hiệu</button>
+    </div>
+  </form>
 </dialog>
 
 <script src="app.js"></script>
