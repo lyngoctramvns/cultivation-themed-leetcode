@@ -14,6 +14,7 @@ const CONG_PHAP = [
   "Greedy",
   "Heap",
   "Sorting",
+  "Khác",
 ];
 const CONG_PHAP_NAMES = {
   Array: "Vạn Tượng Kiếm Trận",
@@ -31,8 +32,10 @@ const CONG_PHAP_NAMES = {
   Greedy: "Đoạt Thiên Cơ",
   Heap: "Thiên Cơ Tranh Tiên Quyết",
   Sorting: "Vạn Pháp Quy Nguyên",
+  "Khác": "Chư Thiên Vạn Nghệ",
 };
 function tenCongPhap(topic) {
+  if (topic === "Khác") return "Chư Thiên Vạn Nghệ (Khác - ngoài LeetCode)";
   return `${CONG_PHAP_NAMES[topic] || topic} (${topic})`;
 }
 
@@ -1368,7 +1371,7 @@ function renderRoadmap() {
     `Hoàn thành đại nguyện ${goal} chiêu thức sẽ đưa đạo hữu lên danh xưng ${titleReached}.`;
 
   document.getElementById("perTopicNote").textContent =
-    `Đại nguyện ${goal} ÷ 15 công pháp ≈ ${perCp} chiêu thức mỗi công pháp — đây là mốc để một công pháp đạt Độ Kiếp riêng của nó.`;
+    `Đại nguyện ${goal} ÷ ${CONG_PHAP.length} công pháp ≈ ${perCp} chiêu thức mỗi công pháp — đây là mốc để một công pháp đạt Độ Kiếp riêng của nó.`;
 }
 
 function renderLegends() {

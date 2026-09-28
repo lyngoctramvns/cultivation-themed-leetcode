@@ -51,7 +51,7 @@ You can open `Tu Tiên Chi Lộ — LeetCode.html` directly in a browser. In thi
 
 - Set a cultivation name, daily practice target, and overall problem-solving goal.
 - Record solved LeetCode problems with their topic, programming language, and solution code.
-- Track progress across 15 topics with cultivation-style names that retain the original topic in parentheses.
+- Track progress across 16 topics, including **Chư Thiên Vạn Nghệ** for practice outside LeetCode.
 - Automatically calculate cultivation realms and titles based on the total number of recorded techniques.
 - Break through tribulations from Hóa Thần onward by solving six additional techniques for each breakthrough. The minimum overall goal is 39 techniques.
 - View practice streaks and a calendar covering the last 30 days.
