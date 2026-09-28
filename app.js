@@ -343,6 +343,57 @@ document.getElementById("downloadDataBtn").onclick = () => {
   setTimeout(() => downloadJSON("truyenky.json", legends), 300);
 };
 
+function isDbShape(data) {
+  return !!data && typeof data === "object" && ("player" in data || "problems" in data);
+}
+document.getElementById("restoreDataBtn").onclick = () => {
+  document.getElementById("restoreDataInput").click();
+};
+document.getElementById("restoreDataInput").onchange = async (event) => {
+  const files = Array.from(event.target.files || []);
+  const status = document.getElementById("restoreDataStatus");
+  event.target.value = "";
+  if (!files.length) return;
+  let importedDb = null;
+  let importedLegends = null;
+  try {
+    for (const file of files) {
+      const parsed = JSON.parse(await file.text());
+      if (isDbShape(parsed)) importedDb = parsed;
+      else importedLegends = parsed;
+    }
+  } catch (e) {
+    status.textContent = "Tệp không hợp lệ. Hãy chọn đúng db.json và/hoặc truyenky.json.";
+    return;
+  }
+  if (!importedDb && !importedLegends) {
+    status.textContent = "Không tìm thấy dữ liệu hợp lệ trong tệp đã chọn.";
+    return;
+  }
+  if (
+    !confirm(
+      "Hồi sinh kiếp cũ sẽ ghi đè toàn bộ tiến độ hiện tại. Xác nhận tiếp tục?",
+    )
+  ) {
+    return;
+  }
+  if (importedDb) {
+    db = normalizeDB(importedDb);
+    saveDB(db);
+  }
+  if (importedLegends) {
+    legends = importedLegends;
+    saveLegends();
+  }
+  populateSelects();
+  applyBackground();
+  applyColors();
+  applyAvatar();
+  populateSettingsExtras();
+  renderAll();
+  status.textContent = "Đã hồi sinh kiếp cũ thành công.";
+};
+
 function realmFor(count) {
   const R = getRealms();
   let r = R[0];

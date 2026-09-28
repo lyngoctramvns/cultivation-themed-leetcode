@@ -57,6 +57,10 @@
       <div style="font-size:.85rem;color:var(--text-dim);">Sao lưu tiến độ</div>
       <div class="setup-note">Tải xuống hai tệp dữ liệu hiện tại (db.json và truyenky.json) để lưu trữ dự phòng.</div>
       <button class="ghost" id="downloadDataBtn" style="margin-top:10px;">Tải xuống kiếp này</button>
+      <div class="setup-note" style="margin-top:14px;">Nhập lại db.json và truyenky.json đã lưu trước đó (dùng khi app trên Hostinger bị xóa và cần khôi phục).</div>
+      <button class="ghost" id="restoreDataBtn" style="margin-top:10px;">Hồi sinh kiếp cũ</button>
+      <input type="file" id="restoreDataInput" accept="application/json" multiple hidden>
+      <div class="setup-note" id="restoreDataStatus" role="status" aria-live="polite"></div>
     </div>
 
     <div class="card">
