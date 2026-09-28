@@ -325,6 +325,54 @@ textarea {
 .name-dialog label {
   margin-top: 0;
 }
+.player-dialog {
+  max-height: min(90dvh, 560px);
+}
+.player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+  margin-top: 10px;
+}
+.player-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.player-item:hover {
+  border-color: var(--gold);
+}
+.player-item-meta {
+  flex: none;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+}
+.player-dialog-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 10px;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+}
+.player-dialog-divider::before,
+.player-dialog-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
 .textarea-editor::backdrop {
   background: rgba(5, 7, 13, 0.78);
   backdrop-filter: blur(2px);

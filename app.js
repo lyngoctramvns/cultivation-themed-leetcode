@@ -1,42 +1,108 @@
-const CONG_PHAP = [
-  "Array",
-  "String",
-  "Hash Table",
-  "Linked List",
-  "Stack & Queue",
-  "Two Pointers",
-  "Sliding Window",
-  "Binary Search",
-  "Tree",
-  "Graph",
-  "Backtracking",
-  "Dynamic Programming",
-  "Greedy",
-  "Heap",
-  "Sorting",
-  "Khác",
+const DAO_LIST = [
+  { id: "leetcode", name: "Kiếm Đạo (LeetCode)" },
+  { id: "ba", name: "Thương Đạo (BA)" },
 ];
-const CONG_PHAP_NAMES = {
-  Array: "Vạn Tượng Kiếm Trận",
-  String: "Ngôn Linh Chân Quyết",
-  "Hash Table": "Nhất Niệm Tàng Vạn Pháp",
-  "Linked List": "Trường Sinh Liên Hoàn",
-  "Stack & Queue": "Luân Hồi Pháp Trận",
-  "Two Pointers": "Song Sinh Kiếm Ý",
-  "Sliding Window": "Lưu Quang Kết Giới",
-  "Binary Search": "Thiên Cơ Truy Tầm",
-  Tree: "Linh Mộc Đạo Chủng",
-  Graph: "Chư Thiên Độn Đồ",
-  Backtracking: "Nghịch Mệnh Hồi Thiên",
-  "Dynamic Programming": "Cửu Chuyển Diễn Đạo",
-  Greedy: "Đoạt Thiên Cơ",
-  Heap: "Thiên Cơ Tranh Tiên Quyết",
-  Sorting: "Vạn Pháp Quy Nguyên",
-  "Khác": "Chư Thiên Vạn Nghệ",
+const DEFAULT_PATH = "leetcode";
+const PATH_DEFS = {
+  leetcode: {
+    languageMode: "fixed",
+    languages: [
+      { id: "python3", label: "Python 3" },
+      { id: "javascript", label: "JavaScript" },
+      { id: "typescript", label: "TypeScript" },
+    ],
+    topics: [
+      { id: "Array", name: "Vạn Tượng Kiếm Trận", subtitle: "Array" },
+      { id: "String", name: "Ngôn Linh Chân Quyết", subtitle: "String" },
+      { id: "Hash Table", name: "Nhất Niệm Tàng Vạn Pháp", subtitle: "Hash Table" },
+      { id: "Linked List", name: "Trường Sinh Liên Hoàn", subtitle: "Linked List" },
+      { id: "Stack & Queue", name: "Luân Hồi Pháp Trận", subtitle: "Stack & Queue" },
+      { id: "Two Pointers", name: "Song Sinh Kiếm Ý", subtitle: "Two Pointers" },
+      { id: "Sliding Window", name: "Lưu Quang Kết Giới", subtitle: "Sliding Window" },
+      { id: "Binary Search", name: "Thiên Cơ Truy Tầm", subtitle: "Binary Search" },
+      { id: "Tree", name: "Linh Mộc Đạo Chủng", subtitle: "Tree" },
+      { id: "Graph", name: "Chư Thiên Độn Đồ", subtitle: "Graph" },
+      { id: "Backtracking", name: "Nghịch Mệnh Hồi Thiên", subtitle: "Backtracking" },
+      { id: "Dynamic Programming", name: "Cửu Chuyển Diễn Đạo", subtitle: "Dynamic Programming" },
+      { id: "Greedy", name: "Đoạt Thiên Cơ", subtitle: "Greedy" },
+      { id: "Heap", name: "Thiên Cơ Tranh Tiên Quyết", subtitle: "Heap" },
+      { id: "Sorting", name: "Vạn Pháp Quy Nguyên", subtitle: "Sorting" },
+      { id: "Khác", name: "Chư Thiên Vạn Nghệ", subtitle: "Khác - ngoài LeetCode" },
+    ],
+  },
+  ba: {
+    languageMode: "byTopic",
+    topics: [
+      {
+        id: "Kiến thức ngành",
+        name: "Thiên Cơ Yếu Quyết",
+        subtitle: "Kiến thức ngành",
+        languages: [
+          { id: "banking_fintech", label: "Banking / Fintech" },
+          { id: "insurance", label: "Insurance" },
+          { id: "investment_wealth", label: "Investment / Wealth Management" },
+          { id: "ecommerce_payment", label: "E-commerce / Payment" },
+          { id: "edtech_education", label: "EdTech / Education" },
+          { id: "travel_international", label: "Travel / International business" },
+          { id: "healthcare_it", label: "Healthcare IT" },
+        ],
+      },
+      {
+        id: "Solution",
+        name: "Giải Nghiệp Chân Kinh",
+        subtitle: "Solution",
+        languages: [
+          { id: "erp_crm_ba", label: "ERP / CRM BA" },
+          { id: "product_ba", label: "Product BA" },
+          { id: "system_data_ba", label: "System/Data BA" },
+        ],
+      },
+    ],
+  },
 };
-function tenCongPhap(topic) {
-  if (topic === "Khác") return "Chư Thiên Vạn Nghệ (Khác - ngoài LeetCode)";
-  return `${CONG_PHAP_NAMES[topic] || topic} (${topic})`;
+function getActivePath() {
+  return PATH_DEFS[db.settings.activePath] ? db.settings.activePath : DEFAULT_PATH;
+}
+function getPathConfig(pathId = getActivePath()) {
+  return PATH_DEFS[pathId] || PATH_DEFS[DEFAULT_PATH];
+}
+function getActiveTopics() {
+  return getPathConfig().topics;
+}
+function getTopicConfig(topicId, pathId = getActivePath()) {
+  return getPathConfig(pathId).topics.find((t) => t.id === topicId);
+}
+function tenCongPhap(topicId) {
+  const topic = getTopicConfig(topicId);
+  if (!topic) return topicId;
+  return `${topic.name} (${topic.subtitle})`;
+}
+function getLanguageOptionsFor(topicId) {
+  const cfg = getPathConfig();
+  if (cfg.languageMode === "byTopic") {
+    const topic = getTopicConfig(topicId);
+    return (topic && topic.languages) || [];
+  }
+  return cfg.languages || [];
+}
+function tenNgonNgu(problem) {
+  const direct = getLanguageOptionsFor(problem.congPhap).find((o) => o.id === problem.lang);
+  if (direct) return direct.label;
+  const cfg = getPathConfig();
+  const all =
+    cfg.languageMode === "byTopic"
+      ? cfg.topics.flatMap((t) => t.languages || [])
+      : cfg.languages || [];
+  const found = all.find((o) => o.id === problem.lang);
+  return found ? found.label : problem.lang;
+}
+function currentPathData() {
+  return db.paths[getActivePath()];
+}
+function currentLegends() {
+  const path = getActivePath();
+  if (!legends[path] || typeof legends[path] !== "object") legends[path] = {};
+  return legends[path];
 }
 
 const REALM_NAMES = [
@@ -116,12 +182,12 @@ function computeThresholds(
   }));
 }
 function getTotalGoal() {
-  return Math.max(MIN_TOTAL_GOAL, db.player.totalGoal || 150);
+  return Math.max(MIN_TOTAL_GOAL, currentPathData().totalGoal || 150);
 }
 function getPerCpGoal() {
   return Math.max(
     1,
-    Math.ceil(getTotalGoal() / CONG_PHAP.length),
+    Math.ceil(getTotalGoal() / getActiveTopics().length),
   );
 }
 function getRealms() {
@@ -153,8 +219,86 @@ const DB_KEY = "congphap_db";
 const API_URL = "/api/db";
 const LEGENDS_KEY = "congphap_legends";
 const LEGENDS_API_URL = "/api/legends";
+const ACTIVE_PLAYER_KEY = "congphap_active_player";
+const SECTS_REGISTRY_KEY = "congphap_sects_registry";
+const SECTS_API_URL = "/api/sects";
 let USE_API = false; // becomes true once /api/db (server.js + db.json) is confirmed reachable
+let USE_SECTS_API = false;
 let legends = {};
+let sectsRegistry = {};
+let activePlayerSlug = null;
+function slugifyName(name) {
+  return String(name || "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+function uniqueSlugFor(name, players) {
+  const base = slugifyName(name) || "daohuu";
+  const taken = new Set((players || []).map((p) => p.slug));
+  if (!taken.has(base)) return base;
+  let i = 2;
+  while (taken.has(`${base}${i}`)) i++;
+  return `${base}${i}`;
+}
+function dbLocalKey() {
+  return `${DB_KEY}:${activePlayerSlug}`;
+}
+function legendsLocalKey() {
+  return `${LEGENDS_KEY}:${activePlayerSlug}`;
+}
+function apiDbUrl() {
+  return `${API_URL}?player=${encodeURIComponent(activePlayerSlug)}`;
+}
+function apiLegendsUrl() {
+  return `${LEGENDS_API_URL}?player=${encodeURIComponent(activePlayerSlug)}`;
+}
+function countAllProblems(data) {
+  if (Array.isArray(data.problems)) return data.problems.length;
+  if (data.paths && typeof data.paths === "object") {
+    return Object.values(data.paths).reduce(
+      (sum, p) => sum + (Array.isArray(p && p.problems) ? p.problems.length : 0),
+      0,
+    );
+  }
+  return 0;
+}
+function getLocalPlayers() {
+  const players = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key || !key.startsWith(`${DB_KEY}:`)) continue;
+    const slug = key.slice(DB_KEY.length + 1);
+    try {
+      const data = JSON.parse(localStorage.getItem(key));
+      players.push({
+        slug,
+        name: (data.player && data.player.name) || slug,
+        problemCount: countAllProblems(data),
+      });
+    } catch (e) {
+      /* skip corrupt local entry */
+    }
+  }
+  players.sort((a, b) => a.name.localeCompare(b.name, "vi"));
+  return players;
+}
+async function fetchPlayerList() {
+  try {
+    const res = await fetch("/api/players", { cache: "no-store" });
+    if (res.ok) return await res.json();
+  } catch (e) {
+    /* server.js not running — caller falls back to local players */
+  }
+  return null;
+}
+async function listAvailablePlayers() {
+  const serverPlayers = await fetchPlayerList();
+  return serverPlayers !== null ? serverPlayers : getLocalPlayers();
+}
 const SECT_RELATIONS = [
   { key: "master", inputId: "sectMaster" },
   { key: "shizun", inputId: "sectShizun" },
@@ -231,11 +375,18 @@ function normalizeSect(sect) {
   });
   return normalized;
 }
+function defaultPathData() {
+  return { dailyTarget: 1, totalGoal: 150, problems: [] };
+}
 function defaultDB() {
+  const paths = {};
+  Object.keys(PATH_DEFS).forEach((id) => {
+    paths[id] = defaultPathData();
+  });
   return {
-    player: { name: "", dailyTarget: 1 },
-    problems: [],
-    settings: {},
+    player: { name: "" },
+    settings: { activePath: DEFAULT_PATH },
+    paths,
     inventory: {
       spiritStones: { low: 0, medium: 0, high: 0 },
       artifacts: "",
@@ -246,9 +397,37 @@ function defaultDB() {
 }
 function normalizeDB(d) {
   d = d || {};
-  d.player = d.player || { name: "", dailyTarget: 1 };
-  d.problems = d.problems || [];
+  d.player = d.player || {};
+  d.player.name = typeof d.player.name === "string" ? d.player.name : "";
   d.settings = d.settings || {};
+  if (!PATH_DEFS[d.settings.activePath]) d.settings.activePath = DEFAULT_PATH;
+
+  const legacyProblems = Array.isArray(d.problems) ? d.problems : null;
+  const legacyDailyTarget = Number(d.player.dailyTarget) > 0 ? Number(d.player.dailyTarget) : null;
+  const legacyTotalGoal = Number(d.player.totalGoal) > 0 ? Number(d.player.totalGoal) : null;
+  delete d.player.dailyTarget;
+  delete d.player.totalGoal;
+  delete d.problems;
+
+  d.paths = d.paths && typeof d.paths === "object" ? d.paths : {};
+  Object.keys(PATH_DEFS).forEach((pathId) => {
+    const existing =
+      d.paths[pathId] && typeof d.paths[pathId] === "object" ? d.paths[pathId] : {};
+    d.paths[pathId] = {
+      dailyTarget:
+        Number(existing.dailyTarget) ||
+        (pathId === DEFAULT_PATH && legacyDailyTarget) ||
+        1,
+      totalGoal:
+        Number(existing.totalGoal) ||
+        (pathId === DEFAULT_PATH && legacyTotalGoal) ||
+        150,
+      problems: Array.isArray(existing.problems)
+        ? existing.problems
+        : (pathId === DEFAULT_PATH && legacyProblems) || [],
+    };
+  });
+
   const inventory = d.inventory || {};
   const spiritStones = inventory.spiritStones || {};
   d.inventory = {
@@ -265,14 +444,14 @@ function normalizeDB(d) {
 }
 function loadDBFromLocalStorage() {
   try {
-    return normalizeDB(JSON.parse(localStorage.getItem(DB_KEY)));
+    return normalizeDB(JSON.parse(localStorage.getItem(dbLocalKey())));
   } catch (e) {
     return defaultDB();
   }
 }
 async function loadDB() {
   try {
-    const res = await fetch(API_URL, { cache: "no-store" });
+    const res = await fetch(apiDbUrl(), { cache: "no-store" });
     if (res.ok) {
       USE_API = true;
       return normalizeDB(await res.json());
@@ -285,10 +464,10 @@ async function loadDB() {
 }
 function saveDB(db) {
   try {
-    localStorage.setItem(DB_KEY, JSON.stringify(db));
+    localStorage.setItem(dbLocalKey(), JSON.stringify(db));
   } catch (e) {}
   if (USE_API) {
-    fetch(API_URL, {
+    fetch(apiDbUrl(), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(db),
@@ -297,32 +476,102 @@ function saveDB(db) {
     });
   }
 }
+
+// Shared registry of known sects/people (across all players) so names/descriptions can be reused.
+function mergeSectIntoRegistry(registry, sect) {
+  sect = sect || {};
+  const name = (sect.name || "").trim();
+  if (!name) return registry;
+  const sectSlug = slugifyName(name) || "tongmon";
+  const entry = registry[sectSlug] || { name, description: "", roles: {} };
+  entry.name = name;
+  const description = (sect.description || "").trim();
+  if (description) entry.description = sect.description;
+  entry.roles = entry.roles || {};
+  SECT_RELATIONS.forEach(({ key }) => {
+    const personName = (sect[key] || "").trim();
+    if (!personName) return;
+    const personSlug = slugifyName(personName) || personName.toLowerCase();
+    entry.roles[key] = entry.roles[key] || {};
+    const person = entry.roles[key][personSlug] || { name: personName, description: "" };
+    person.name = personName;
+    const personDescription = (sect[`${key}Description`] || "").trim();
+    if (personDescription) person.description = sect[`${key}Description`];
+    entry.roles[key][personSlug] = person;
+  });
+  registry[sectSlug] = entry;
+  return registry;
+}
+function loadLocalSectsRegistry() {
+  try {
+    return JSON.parse(localStorage.getItem(SECTS_REGISTRY_KEY)) || {};
+  } catch (e) {
+    return {};
+  }
+}
+function saveLocalSectsRegistry() {
+  try {
+    localStorage.setItem(SECTS_REGISTRY_KEY, JSON.stringify(sectsRegistry));
+  } catch (e) {}
+}
+async function loadSectsRegistry() {
+  try {
+    const res = await fetch(SECTS_API_URL, { cache: "no-store" });
+    if (res.ok) {
+      USE_SECTS_API = true;
+      return await res.json();
+    }
+  } catch (e) {
+    /* server.js not running — fall back to local registry */
+  }
+  USE_SECTS_API = false;
+  return loadLocalSectsRegistry();
+}
+function persistSectToRegistry(sect) {
+  sectsRegistry = mergeSectIntoRegistry(sectsRegistry, sect);
+  saveLocalSectsRegistry();
+  if (USE_SECTS_API) {
+    fetch(SECTS_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sect }),
+    }).catch(() => {
+      USE_SECTS_API = false;
+    });
+  }
+}
+
 let db = defaultDB();
 
 async function loadLegends() {
   try {
-    const res = await fetch(LEGENDS_API_URL, { cache: "no-store" });
+    const res = await fetch(apiLegendsUrl(), { cache: "no-store" });
     if (res.ok) return await res.json();
   } catch (e) {
     /* server.js not running — use browser fallback */
   }
   try {
-    return JSON.parse(localStorage.getItem(LEGENDS_KEY)) || {};
+    return JSON.parse(localStorage.getItem(legendsLocalKey())) || {};
   } catch (e) {
     return {};
   }
 }
 function saveLegends() {
   try {
-    localStorage.setItem(LEGENDS_KEY, JSON.stringify(legends));
+    localStorage.setItem(legendsLocalKey(), JSON.stringify(legends));
   } catch (e) {}
   if (USE_API) {
-    fetch(LEGENDS_API_URL, {
+    fetch(apiLegendsUrl(), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(legends),
     }).catch(() => {});
   }
+}
+function normalizeLegends(raw) {
+  const data = raw && typeof raw === "object" ? raw : {};
+  const looksLegacyFlat = REALM_NAMES.some((name) => typeof data[name] === "string");
+  return looksLegacyFlat ? { [DEFAULT_PATH]: { ...data } } : data;
 }
 
 function downloadJSON(filename, data) {
@@ -339,12 +588,12 @@ function downloadJSON(filename, data) {
   URL.revokeObjectURL(url);
 }
 document.getElementById("downloadDataBtn").onclick = () => {
-  downloadJSON("db.json", db);
-  setTimeout(() => downloadJSON("truyenky.json", legends), 300);
+  downloadJSON(`db_${activePlayerSlug}.json`, db);
+  setTimeout(() => downloadJSON(`truyenky_${activePlayerSlug}.json`, legends), 300);
 };
 
 function isDbShape(data) {
-  return !!data && typeof data === "object" && ("player" in data || "problems" in data);
+  return !!data && typeof data === "object" && ("player" in data || "problems" in data || "paths" in data);
 }
 document.getElementById("restoreDataBtn").onclick = () => {
   document.getElementById("restoreDataInput").click();
@@ -382,7 +631,7 @@ document.getElementById("restoreDataInput").onchange = async (event) => {
     saveDB(db);
   }
   if (importedLegends) {
-    legends = importedLegends;
+    legends = normalizeLegends(importedLegends);
     saveLegends();
   }
   populateSelects();
@@ -456,6 +705,117 @@ document.getElementById("nameDialogForm").addEventListener("submit", (event) => 
 document.getElementById("cancelNameDialog").onclick = () =>
   nameDialog.close("cancel");
 
+const playerDialog = document.getElementById("playerDialog");
+const playerDialogList = document.getElementById("playerDialogList");
+const playerDialogEmpty = document.getElementById("playerDialogEmpty");
+const playerDialogInput = document.getElementById("playerDialogInput");
+const playerDialogError = document.getElementById("playerDialogError");
+const playerDialogForm = document.getElementById("playerDialogForm");
+
+function choosePlayer(players) {
+  playerDialogList.replaceChildren();
+  playerDialogEmpty.style.display = players.length ? "none" : "block";
+  players.forEach((p) => {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "player-item";
+    item.dataset.slug = p.slug;
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = p.name;
+    const metaSpan = document.createElement("span");
+    metaSpan.className = "player-item-meta";
+    metaSpan.textContent = `${p.problemCount || 0} chiêu thức`;
+    item.append(nameSpan, metaSpan);
+    playerDialogList.appendChild(item);
+  });
+  playerDialogInput.value = "";
+  playerDialogError.style.display = "none";
+  playerDialog.returnValue = "";
+  const onCancel = (event) => event.preventDefault();
+  playerDialog.addEventListener("cancel", onCancel);
+  const closed = new Promise((resolve) => {
+    playerDialog.addEventListener(
+      "close",
+      () => {
+        playerDialog.removeEventListener("cancel", onCancel);
+        resolve(playerDialog.returnValue || null);
+      },
+      { once: true },
+    );
+  });
+  playerDialog.showModal();
+  return closed;
+}
+
+playerDialogList.addEventListener("click", (event) => {
+  const item = event.target.closest(".player-item");
+  if (!item) return;
+  playerDialog.close(item.dataset.slug);
+});
+
+playerDialogForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = playerDialogInput.value.trim();
+  if (!name) {
+    playerDialogError.style.display = "block";
+    playerDialogInput.focus();
+    return;
+  }
+  playerDialog.close(`__new__:${name}`);
+});
+
+async function determineActivePlayer() {
+  const players = await listAvailablePlayers();
+  const storedSlug = localStorage.getItem(ACTIVE_PLAYER_KEY);
+  if (storedSlug && players.some((p) => p.slug === storedSlug)) {
+    return { slug: storedSlug, isNew: false };
+  }
+  if (players.length === 0) {
+    const name = (await requestPlayerName("Chọn đạo hiệu", "")) || "Vô Danh";
+    return { slug: uniqueSlugFor(name, players), isNew: true, newName: name };
+  }
+  const choice = await choosePlayer(players);
+  if (choice && choice.startsWith("__new__:")) {
+    const name = choice.slice("__new__:".length) || "Vô Danh";
+    return { slug: uniqueSlugFor(name, players), isNew: true, newName: name };
+  }
+  return { slug: choice, isNew: false };
+}
+
+async function activatePlayer(slug, isNew, newName) {
+  activePlayerSlug = slug;
+  localStorage.setItem(ACTIVE_PLAYER_KEY, slug);
+  const [loadedDb, loadedLegends, loadedSectsRegistry] = await Promise.all([
+    loadDB(),
+    loadLegends(),
+    loadSectsRegistry(),
+  ]);
+  db = loadedDb;
+  legends = normalizeLegends(loadedLegends);
+  sectsRegistry = loadedSectsRegistry || {};
+  if (isNew) db.player.name = newName || "Vô Danh";
+  populateSelects();
+  await ensureName();
+  saveDB(db);
+  applyBackground();
+  applyColors();
+  applyAvatar();
+  populateSettingsExtras();
+  renderAll();
+}
+
+document.getElementById("switchPlayerBtn").onclick = async () => {
+  const players = await listAvailablePlayers();
+  const choice = await choosePlayer(players);
+  if (!choice) return;
+  if (choice.startsWith("__new__:")) {
+    const name = choice.slice("__new__:".length) || "Vô Danh";
+    await activatePlayer(uniqueSlugFor(name, players), true, name);
+  } else if (choice !== activePlayerSlug) {
+    await activatePlayer(choice, false);
+  }
+};
+
 async function ensureName() {
   if (!db.player.name) {
     const name = await requestPlayerName("Chọn đạo hiệu", "");
@@ -473,16 +833,40 @@ document.getElementById("renameBtn").onclick = async () => {
 };
 
 function populateSelects() {
+  const pathSelect = document.getElementById("pathSelect");
+  pathSelect.innerHTML = "";
+  DAO_LIST.forEach((p) => {
+    pathSelect.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+  });
+  pathSelect.value = getActivePath();
+
   const cp = document.getElementById("cpSelect");
   const fc = document.getElementById("filterCp");
   cp.innerHTML = "";
   fc.innerHTML = '<option value="">Tất cả công pháp</option>';
-  CONG_PHAP.forEach((c) => {
-    const label = tenCongPhap(c);
-    cp.innerHTML += `<option value="${c}">${label}</option>`;
-    fc.innerHTML += `<option value="${c}">${label}</option>`;
+  getActiveTopics().forEach((t) => {
+    const label = tenCongPhap(t.id);
+    cp.innerHTML += `<option value="${t.id}">${label}</option>`;
+    fc.innerHTML += `<option value="${t.id}">${label}</option>`;
   });
+  populateLangSelect();
 }
+function populateLangSelect() {
+  const lang = document.getElementById("langSelect");
+  const options = getLanguageOptionsFor(document.getElementById("cpSelect").value);
+  lang.innerHTML = options
+    .map((o) => `<option value="${o.id}">${o.label}</option>`)
+    .join("");
+}
+document.getElementById("cpSelect").addEventListener("change", populateLangSelect);
+document.getElementById("savePathBtn").onclick = () => {
+  const newPath = document.getElementById("pathSelect").value;
+  if (!PATH_DEFS[newPath]) return;
+  db.settings.activePath = newPath;
+  saveDB(db);
+  populateSelects();
+  renderAll();
+};
 
 const tabNavigation = document.querySelector(".tabs");
 const mobileNavToggle = document.querySelector(".mobile-nav-toggle");
@@ -804,7 +1188,7 @@ document.getElementById("closeTextareaEditor").onclick = () =>
 
 document.getElementById("saveTarget").onclick = () => {
   const v = parseInt(document.getElementById("dailyTarget").value) || 1;
-  db.player.dailyTarget = v;
+  currentPathData().dailyTarget = v;
   saveDB(db);
   renderTodayStatus();
 };
@@ -868,7 +1252,67 @@ function renderSect() {
       sect[`${key}Description`];
   });
   document.getElementById("sectDescription").value = sect.description;
+  populateSectNameDatalist();
+  populateSectRoleDatalists(getRegistrySectEntry(sect.name));
 }
+
+function fillDatalist(id, labels) {
+  const list = document.getElementById(id);
+  if (!list) return;
+  list.innerHTML = labels
+    .map((label) => `<option value="${escapeHtml(label)}"></option>`)
+    .join("");
+}
+function getRegistrySectEntry(name) {
+  const slug = slugifyName((name || "").trim());
+  return slug ? sectsRegistry[slug] : undefined;
+}
+function populateSectNameDatalist() {
+  fillDatalist(
+    "sectNameList",
+    Object.values(sectsRegistry).map((entry) => entry.name),
+  );
+}
+function populateSectRoleDatalists(entry) {
+  SECT_RELATIONS.forEach(({ key, inputId }) => {
+    const people = (entry && entry.roles && entry.roles[key]) || {};
+    fillDatalist(
+      `${inputId}List`,
+      Object.values(people).map((p) => p.name),
+    );
+  });
+}
+
+document.getElementById("sectName").addEventListener("input", () => {
+  populateSectRoleDatalists(
+    getRegistrySectEntry(document.getElementById("sectName").value),
+  );
+});
+document.getElementById("sectName").addEventListener("change", () => {
+  const entry = getRegistrySectEntry(document.getElementById("sectName").value);
+  const descField = document.getElementById("sectDescription");
+  if (entry && entry.description && !descField.value.trim()) {
+    descField.value = entry.description;
+  }
+});
+SECT_RELATIONS.forEach(({ key, inputId }) => {
+  document.getElementById(inputId).addEventListener("change", () => {
+    const sectEntry = getRegistrySectEntry(
+      document.getElementById("sectName").value,
+    );
+    const personSlug = slugifyName(
+      document.getElementById(inputId).value.trim(),
+    );
+    const person =
+      sectEntry && sectEntry.roles && sectEntry.roles[key] && personSlug
+        ? sectEntry.roles[key][personSlug]
+        : undefined;
+    const descField = document.getElementById(`${inputId}Description`);
+    if (person && person.description && !descField.value.trim()) {
+      descField.value = person.description;
+    }
+  });
+});
 
 function readSectForm() {
   const sect = {
@@ -895,6 +1339,9 @@ document.getElementById("joinSect").onclick = () => {
 document.getElementById("saveSect").onclick = () => {
   db.sect = readSectForm();
   saveDB(db);
+  persistSectToRegistry(db.sect);
+  populateSectNameDatalist();
+  populateSectRoleDatalists(getRegistrySectEntry(db.sect.name));
   document.getElementById("sectStatus").textContent =
     `Đang bái nhập ${db.sect.name || "tông môn"}.`;
   document.getElementById("sectFormStatus").textContent =
@@ -909,6 +1356,7 @@ function endSectMembership(status) {
   if (!confirm(message)) return;
   db.sect = { ...readSectForm(), status };
   saveDB(db);
+  persistSectToRegistry(db.sect);
   renderSect();
 }
 
@@ -922,7 +1370,7 @@ document.getElementById("saveTotalGoal").onclick = () => {
     MIN_TOTAL_GOAL,
     parseInt(document.getElementById("totalGoal").value) || MIN_TOTAL_GOAL,
   );
-  db.player.totalGoal = v;
+  currentPathData().totalGoal = v;
   saveDB(db);
   renderGoal();
   renderCpProgress();
@@ -1236,7 +1684,7 @@ document.getElementById("submitBtn").onclick = () => {
     return;
   }
   err.style.display = "none";
-  db.problems.push({
+  currentPathData().problems.push({
     id: Date.now(),
     congPhap: cp,
     chieuThuc: name,
@@ -1271,8 +1719,8 @@ document.getElementById("filterCp").onchange = renderTable;
 
 function renderTodayStatus() {
   const el = document.getElementById("todayStatus");
-  const target = db.player.dailyTarget || 1;
-  const doneToday = db.problems.filter((p) => p.date === todayStr()).length;
+  const target = currentPathData().dailyTarget || 1;
+  const doneToday = currentPathData().problems.filter((p) => p.date === todayStr()).length;
   document.getElementById("dailyTarget").value = target;
   if (doneToday >= target) {
     el.className = "today-status ok";
@@ -1285,7 +1733,7 @@ function renderTodayStatus() {
 
 function renderHeader() {
   document.getElementById("nameSpan").textContent = db.player.name || "?";
-  const total = db.problems.length;
+  const total = currentPathData().problems.length;
   const titleSpan = document.getElementById("titleSpan");
   const title = titleFor(total);
   titleSpan.textContent = title === "Phàm Nhân" ? "" : ` — ${title}`;
@@ -1301,10 +1749,10 @@ function renderHeader() {
 function renderGoal() {
   const goal = getTotalGoal();
   document.getElementById("totalGoal").value = goal;
-  const perCp = Math.ceil(goal / CONG_PHAP.length);
+  const perCp = Math.ceil(goal / getActiveTopics().length);
   document.getElementById("goalDistNote").textContent =
-    `Đại nguyện chia đều cho ${CONG_PHAP.length} công pháp: mỗi công pháp cần khoảng ${perCp} chiêu thức để viên mãn. Mức tối thiểu ${MIN_TOTAL_GOAL} chiêu gồm 9 bậc tu vi và 5 thiên kiếp.`;
-  const total = db.problems.length;
+    `Đại nguyện chia đều cho ${getActiveTopics().length} công pháp: mỗi công pháp cần khoảng ${perCp} chiêu thức để viên mãn. Mức tối thiểu ${MIN_TOTAL_GOAL} chiêu gồm 9 bậc tu vi và 5 thiên kiếp.`;
+  const total = currentPathData().problems.length;
   const pct = Math.min(100, Math.round((total / goal) * 100));
   document.getElementById("goalProgressLabel").textContent =
     `${total} / ${goal} chiêu thức`;
@@ -1316,13 +1764,14 @@ function renderCpProgress() {
   const wrap = document.getElementById("cpProgressList");
   wrap.innerHTML = "";
   const goal = getTotalGoal();
-  const perCpGoal = Math.ceil(goal / CONG_PHAP.length);
-  CONG_PHAP.forEach((cp) => {
-    const count = db.problems.filter((p) => p.congPhap === cp).length;
+  const perCpGoal = Math.ceil(goal / getActiveTopics().length);
+  const problems = currentPathData().problems;
+  getActiveTopics().forEach((topic) => {
+    const count = problems.filter((p) => p.congPhap === topic.id).length;
     const realm = realmForTopic(count);
     const pct = Math.min(100, Math.round((count / perCpGoal) * 100));
     wrap.innerHTML += `<div class="cp-progress">
-      <div class="cp-row"><span>${tenCongPhap(cp)}</span><span style="color:var(--gold)">${realm} · ${count}/${perCpGoal} chiêu</span></div>
+      <div class="cp-row"><span>${tenCongPhap(topic.id)}</span><span style="color:var(--gold)">${realm} · ${count}/${perCpGoal} chiêu</span></div>
       <div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div>
     </div>`;
   });
@@ -1331,7 +1780,7 @@ function renderCpProgress() {
 function renderTable() {
   const q = document.getElementById("searchInput").value.toLowerCase();
   const fc = document.getElementById("filterCp").value;
-  const list = db.problems
+  const list = currentPathData().problems
     .filter(
       (p) =>
         (!fc || p.congPhap === fc) &&
@@ -1346,7 +1795,7 @@ function renderTable() {
   list.forEach((p) => {
     const tr = document.createElement("tr");
     tr.className = "solved-row";
-    tr.innerHTML = `<td>${escapeHtml(p.chieuThuc)}</td><td><span class="pill">${tenCongPhap(p.congPhap)}</span></td><td>${p.lang}</td><td>${p.date}</td>`;
+    tr.innerHTML = `<td>${escapeHtml(p.chieuThuc)}</td><td><span class="pill">${tenCongPhap(p.congPhap)}</span></td><td>${escapeHtml(tenNgonNgu(p))}</td><td>${p.date}</td>`;
     const codeRow = document.createElement("tr");
     const codeTd = document.createElement("td");
     codeTd.colSpan = 4;
@@ -1382,7 +1831,7 @@ function renderCalendar() {
     d.setDate(d.getDate() - i);
     days.push(d.toISOString().slice(0, 10));
   }
-  const doneSet = new Set(db.problems.map((p) => p.date));
+  const doneSet = new Set(currentPathData().problems.map((p) => p.date));
   days.forEach((d) => {
     const cell = document.createElement("div");
     cell.className =
@@ -1440,14 +1889,15 @@ function renderRoadmap() {
     `Hoàn thành đại nguyện ${goal} chiêu thức sẽ đưa đạo hữu lên danh xưng ${titleReached}.`;
 
   document.getElementById("perTopicNote").textContent =
-    `Đại nguyện ${goal} ÷ ${CONG_PHAP.length} công pháp ≈ ${perCp} chiêu thức mỗi công pháp — đây là mốc để một công pháp đạt Độ Kiếp riêng của nó.`;
+    `Đại nguyện ${goal} ÷ ${getActiveTopics().length} công pháp ≈ ${perCp} chiêu thức mỗi công pháp — đây là mốc để một công pháp đạt Độ Kiếp riêng của nó.`;
 }
 
 function renderLegends() {
   const wrap = document.getElementById("legendList");
   if (!wrap) return;
-  const total = db.problems.length;
+  const total = currentPathData().problems.length;
   const realms = getRealms();
+  const pathLegends = currentLegends();
   wrap.innerHTML = "";
   realms.forEach((realm, index) => {
     const unlocked = total >= realm.min;
@@ -1468,14 +1918,14 @@ function renderLegends() {
     textarea.placeholder = unlocked
       ? "Viết giai thoại về lần đột phá cảnh giới này..."
       : "Chương truyện còn phong ấn.";
-    textarea.value = legends[realm.name] || "";
+    textarea.value = pathLegends[realm.name] || "";
     textarea.disabled = !unlocked;
     const button = document.createElement("button");
     button.className = "ghost";
     button.textContent = "Lưu chương truyện";
     button.disabled = !unlocked;
     button.onclick = () => {
-      legends[realm.name] = textarea.value;
+      pathLegends[realm.name] = textarea.value;
       saveLegends();
       status.textContent = `Đã lưu truyền kỳ của ${realm.name}.`;
     };
@@ -1498,12 +1948,6 @@ function renderAll() {
 }
 
 (async function init() {
-  [db, legends] = await Promise.all([loadDB(), loadLegends()]);
-  populateSelects();
-  await ensureName();
-  applyBackground();
-  applyColors();
-  applyAvatar();
-  populateSettingsExtras();
-  renderAll();
+  const chosen = await determineActivePlayer();
+  await activatePlayer(chosen.slug, chosen.isNew, chosen.newName);
 })();

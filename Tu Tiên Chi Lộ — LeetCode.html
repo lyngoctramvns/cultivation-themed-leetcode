@@ -16,7 +16,10 @@
       <h1 id="playerNameDisplay" class="serif">Tu Tiên Chi Lộ</h1>
       <div class="player-line"><span id="nameSpan" class="danh-xung">?</span><span id="titleSpan" class="danh-xung"></span></div>
     </div>
-    <button class="ghost" id="renameBtn">Đổi đạo hiệu</button>
+    <div class="row" style="gap:8px;">
+      <button class="ghost" id="switchPlayerBtn">Đổi đạo hữu</button>
+      <button class="ghost" id="renameBtn">Đổi đạo hiệu</button>
+    </div>
   </div>
 
   <nav class="tabs" aria-label="Điều hướng chính">
@@ -79,11 +82,7 @@
         </div>
         <div>
           <label>Ngôn ngữ luyện công</label>
-          <select id="langSelect">
-            <option value="python3">Python 3</option>
-            <option value="javascript">JavaScript</option>
-            <option value="typescript">TypeScript</option>
-          </select>
+          <select id="langSelect"></select>
         </div>
       </div>
       <label>Tên chiêu thức (tên bài LeetCode) — bắt buộc</label>
@@ -205,47 +204,55 @@
     <div class="card" id="sectDetails" style="display:none;">
       <h3 class="serif" style="margin-top:0;">Thông Tin Tông Môn</h3>
       <label for="sectName">Tên tông môn</label>
-      <input type="text" id="sectName" placeholder="Nhập tên tông môn">
+      <input type="text" id="sectName" placeholder="Nhập tên tông môn hoặc chọn tông môn đã có" list="sectNameList" autocomplete="off">
+      <datalist id="sectNameList"></datalist>
       <div class="row">
         <div>
           <label for="sectMaster">Sư phụ</label>
-          <input type="text" id="sectMaster" placeholder="Nếu có">
+          <input type="text" id="sectMaster" placeholder="Nếu có" list="sectMasterList" autocomplete="off">
+          <datalist id="sectMasterList"></datalist>
           <label for="sectMasterDescription">Mô tả sư phụ</label>
           <textarea class="sect-person-description" id="sectMasterDescription" rows="2" placeholder="Tính cách, vai trò, mối quan hệ..."></textarea>
         </div>
         <div>
           <label for="sectShizun">Sư tôn</label>
-          <input type="text" id="sectShizun" placeholder="Nếu có">
+          <input type="text" id="sectShizun" placeholder="Nếu có" list="sectShizunList" autocomplete="off">
+          <datalist id="sectShizunList"></datalist>
           <label for="sectShizunDescription">Mô tả sư tôn</label>
           <textarea class="sect-person-description" id="sectShizunDescription" rows="2" placeholder="Tính cách, vai trò, mối quan hệ..."></textarea>
         </div>
         <div>
           <label for="sectSeniorSister">Sư tỷ</label>
-          <input type="text" id="sectSeniorSister" placeholder="Nếu có">
+          <input type="text" id="sectSeniorSister" placeholder="Nếu có" list="sectSeniorSisterList" autocomplete="off">
+          <datalist id="sectSeniorSisterList"></datalist>
           <label for="sectSeniorSisterDescription">Mô tả sư tỷ</label>
           <textarea class="sect-person-description" id="sectSeniorSisterDescription" rows="2" placeholder="Tính cách, vai trò, mối quan hệ..."></textarea>
         </div>
         <div>
           <label for="sectJuniorSister">Sư muội</label>
-          <input type="text" id="sectJuniorSister" placeholder="Nếu có">
+          <input type="text" id="sectJuniorSister" placeholder="Nếu có" list="sectJuniorSisterList" autocomplete="off">
+          <datalist id="sectJuniorSisterList"></datalist>
           <label for="sectJuniorSisterDescription">Mô tả sư muội</label>
           <textarea class="sect-person-description" id="sectJuniorSisterDescription" rows="2" placeholder="Tính cách, vai trò, mối quan hệ..."></textarea>
         </div>
         <div>
           <label for="sectSeniorBrother">Sư huynh</label>
-          <input type="text" id="sectSeniorBrother" placeholder="Nếu có">
+          <input type="text" id="sectSeniorBrother" placeholder="Nếu có" list="sectSeniorBrotherList" autocomplete="off">
+          <datalist id="sectSeniorBrotherList"></datalist>
           <label for="sectSeniorBrotherDescription">Mô tả sư huynh</label>
           <textarea class="sect-person-description" id="sectSeniorBrotherDescription" rows="2" placeholder="Tính cách, vai trò, mối quan hệ..."></textarea>
         </div>
         <div>
           <label for="sectJuniorBrother">Sư đệ</label>
-          <input type="text" id="sectJuniorBrother" placeholder="Nếu có">
+          <input type="text" id="sectJuniorBrother" placeholder="Nếu có" list="sectJuniorBrotherList" autocomplete="off">
+          <datalist id="sectJuniorBrotherList"></datalist>
           <label for="sectJuniorBrotherDescription">Mô tả sư đệ</label>
           <textarea class="sect-person-description" id="sectJuniorBrotherDescription" rows="2" placeholder="Tính cách, vai trò, mối quan hệ..."></textarea>
         </div>
       </div>
       <label for="sectDaoCompanion">Đạo lữ (nếu có)</label>
-      <input type="text" id="sectDaoCompanion" placeholder="Nhập tên đạo lữ">
+      <input type="text" id="sectDaoCompanion" placeholder="Nhập tên đạo lữ" list="sectDaoCompanionList" autocomplete="off">
+      <datalist id="sectDaoCompanionList"></datalist>
       <label for="sectDaoCompanionDescription">Mô tả đạo lữ</label>
       <textarea class="sect-person-description" id="sectDaoCompanionDescription" rows="2" placeholder="Tính cách, vai trò, mối quan hệ..."></textarea>
       <label for="sectDescription">Mô tả tông môn</label>
@@ -260,6 +267,16 @@
   </div>
 
   <div class="panel" id="panel-caidat">
+    <div class="card">
+      <h3 class="serif" style="margin-top:0;">Chọn Đạo Tu Luyện</h3>
+      <div class="setup-note">Mỗi đạo có công pháp, ngôn ngữ luyện công và tiến độ tu luyện riêng biệt, không ảnh hưởng lẫn nhau.</div>
+      <label for="pathSelect">Đạo đang tu luyện</label>
+      <div class="row">
+        <div><select id="pathSelect"></select></div>
+        <button class="ghost" id="savePathBtn">Lưu đạo tu luyện</button>
+      </div>
+    </div>
+
     <div class="card">
       <h3 class="serif" style="margin-top:0;">Mục Tiêu Tu Luyện</h3>
       <label>Mục tiêu tu luyện mỗi ngày (chiêu thức)</label>
@@ -377,6 +394,22 @@
     <button class="ghost" id="cancelTextareaEditor" type="button">Hủy</button>
     <button class="primary" id="applyTextareaEditor" type="button">Áp dụng</button>
   </div>
+</dialog>
+
+<dialog id="playerDialog" class="textarea-editor name-dialog player-dialog" aria-labelledby="playerDialogTitle">
+  <div class="textarea-editor-header">
+    <h2 class="serif" id="playerDialogTitle">Chọn đạo hữu</h2>
+  </div>
+  <div class="setup-note">Chọn một đạo hữu đã có, hoặc tạo một đạo hữu mới để bắt đầu kiếp tu tiên riêng.</div>
+  <div id="playerDialogList" class="player-list"></div>
+  <div class="setup-note" id="playerDialogEmpty" style="display:none;">Chưa có đạo hữu nào được lưu trên máy chủ này.</div>
+  <div class="player-dialog-divider"><span>hoặc</span></div>
+  <form id="playerDialogForm" novalidate>
+    <label for="playerDialogInput">Tạo đạo hữu mới</label>
+    <input type="text" id="playerDialogInput" maxlength="40" placeholder="Nhập đạo hiệu mới" autocomplete="off">
+    <div class="err" id="playerDialogError" role="alert">Đạo hiệu không được để trống.</div>
+    <button class="primary" type="submit" style="margin-top:10px;">Bắt đầu kiếp tu tiên mới</button>
+  </form>
 </dialog>
 
 <dialog id="nameDialog" class="textarea-editor name-dialog" aria-labelledby="nameDialogTitle">
