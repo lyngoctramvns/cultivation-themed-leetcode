@@ -712,22 +712,36 @@ const playerDialogInput = document.getElementById("playerDialogInput");
 const playerDialogError = document.getElementById("playerDialogError");
 const playerDialogForm = document.getElementById("playerDialogForm");
 
-function choosePlayer(players) {
+function renderPlayerList(currentPlayers) {
   playerDialogList.replaceChildren();
-  playerDialogEmpty.style.display = players.length ? "none" : "block";
-  players.forEach((p) => {
-    const item = document.createElement("button");
-    item.type = "button";
+  playerDialogEmpty.style.display = currentPlayers.length ? "none" : "block";
+  currentPlayers.forEach((p) => {
+    const item = document.createElement("div");
     item.className = "player-item";
     item.dataset.slug = p.slug;
+    const selectButton = document.createElement("button");
+    selectButton.type = "button";
+    selectButton.className = "player-select";
     const nameSpan = document.createElement("span");
     nameSpan.textContent = p.name;
     const metaSpan = document.createElement("span");
     metaSpan.className = "player-item-meta";
     metaSpan.textContent = `${p.problemCount || 0} chiêu thức`;
-    item.append(nameSpan, metaSpan);
+    selectButton.append(nameSpan, metaSpan);
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "player-delete";
+    deleteButton.dataset.slug = p.slug;
+    deleteButton.textContent = "Xóa";
+    deleteButton.title = `Xóa ${p.name}`;
+    deleteButton.setAttribute("aria-label", `Xóa ${p.name}`);
+    item.append(selectButton, deleteButton);
     playerDialogList.appendChild(item);
   });
+}
+
+function choosePlayer(players) {
+  renderPlayerList(players);
   playerDialogInput.value = "";
   playerDialogError.style.display = "none";
   playerDialog.returnValue = "";
@@ -747,10 +761,44 @@ function choosePlayer(players) {
   return closed;
 }
 
-playerDialogList.addEventListener("click", (event) => {
-  const item = event.target.closest(".player-item");
-  if (!item) return;
-  playerDialog.close(item.dataset.slug);
+async function deletePlayerData(slug) {
+  try {
+    const response = await fetch(`/api/players?player=${encodeURIComponent(slug)}`, {
+      method: "DELETE",
+    });
+    if (response.ok) return true;
+  } catch (error) {
+    /* server.js not running — use local storage below */
+  }
+  const dbKey = `${DB_KEY}:${slug}`;
+  const legendsKey = `${LEGENDS_KEY}:${slug}`;
+  const existed = localStorage.getItem(dbKey) !== null || localStorage.getItem(legendsKey) !== null;
+  localStorage.removeItem(dbKey);
+  localStorage.removeItem(legendsKey);
+  return existed;
+}
+
+playerDialogList.addEventListener("click", async (event) => {
+  const deleteButton = event.target.closest(".player-delete");
+  if (deleteButton) {
+    event.stopPropagation();
+    const item = deleteButton.closest(".player-item");
+    const name = item.querySelector(".player-select span")?.textContent || "đạo hữu này";
+    if (!window.confirm(`Xóa ${name} và toàn bộ tiến độ tu luyện?`)) return;
+    const deleted = await deletePlayerData(deleteButton.dataset.slug);
+    if (!deleted) return;
+    if (deleteButton.dataset.slug === activePlayerSlug) {
+      localStorage.removeItem(ACTIVE_PLAYER_KEY);
+      playerDialog.close();
+      window.location.reload();
+      return;
+    }
+    renderPlayerList(await listAvailablePlayers());
+    return;
+  }
+  const selectButton = event.target.closest(".player-select");
+  if (!selectButton) return;
+  playerDialog.close(selectButton.closest(".player-item").dataset.slug);
 });
 
 playerDialogForm.addEventListener("submit", (event) => {

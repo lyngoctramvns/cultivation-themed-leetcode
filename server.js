@@ -197,6 +197,24 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (pathname === "/api/players" && req.method === "DELETE") {
+    if (!isValidSlug(slug)) {
+      sendJSON(res, 400, { ok: false, error: "Missing or invalid player" });
+      return;
+    }
+    let deleted = false;
+    [dbFileForSlug(slug), legendsFileForSlug(slug)].forEach((file) => {
+      try {
+        fs.unlinkSync(file);
+        deleted = true;
+      } catch (error) {
+        if (error.code !== "ENOENT") throw error;
+      }
+    });
+    sendJSON(res, deleted ? 200 : 404, { ok: deleted });
+    return;
+  }
+
   if (pathname === "/api/db" && req.method === "GET") {
     if (!isValidSlug(slug)) {
       sendJSON(res, 400, { error: "Missing or invalid player" });
