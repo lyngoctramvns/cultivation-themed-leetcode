@@ -117,6 +117,98 @@ const REALM_NAMES = [
   "Đại Thừa",
   "Độ Kiếp",
 ];
+const REALM_LORE = {
+  "Phàm Nhân": {
+    breakthrough:
+      "Chưa chính thức bước vào tu luyện, thân thể phàm tục, khí huyết vận hành theo lẽ tự nhiên.",
+    qi: "Không thể hấp thụ linh khí trời đất, chỉ hô hấp trọc khí như người thường.",
+    core: "Chưa có khái niệm đan điền hay kim đan.",
+    lifespan: "Thọ nguyên trung bình 70–100 năm.",
+    power: "Sức mạnh ngang người phàm, không có pháp lực.",
+    image: "pham_nhan.jpg",
+  },
+  "Luyện Khí": {
+    breakthrough:
+      "Khai mở kinh mạch, dẫn động chân khí lưu chuyển theo đại tiểu chu thiên, đả thông đan điền để tích trữ linh khí.",
+    qi: "Bắt đầu hô hấp và hấp thụ linh khí trời đất qua thổ nạp, chuyển hóa trọc khí thành chân nguyên.",
+    core: "Chân khí tích lũy dần trong đan điền, hình thành nền móng đầu tiên cho việc ngưng đan sau này.",
+    lifespan: "Thọ nguyên tăng thêm khoảng 50–100 năm, đạt mốc 150–200 năm.",
+    power: "Có thể ngự khí phòng thân, thi triển pháp thuật sơ cấp, sức mạnh hơn hẳn người thường.",
+    image: "luyen_khi.jpg",
+  },
+  "Trúc Cơ": {
+    breakthrough:
+      "Dùng chân khí tích lũy đủ độ thuần khiết để đúc thành nền tảng đạo cơ vững chắc trong đan điền, thường phải vượt qua cửa ải Trúc Cơ đan hoặc dựa vào thiên phú lĩnh ngộ.",
+    qi: "Hấp thụ linh khí trời đất với tốc độ và mật độ cao hơn hẳn, có thể ngự kiếm/ngự khí bay lượn ngắn.",
+    core: "Nền móng đan điền được củng cố kiên cố, chuẩn bị không gian để ngưng kết kim đan.",
+    lifespan: "Thọ nguyên tăng thêm khoảng 100–200 năm, đạt mốc 300–400 năm.",
+    power: "Uy lực tăng vọt, một chưởng có thể phá vỡ đá tảng, so tài ngang ngửa mãnh thú sơ cấp.",
+    image: "truc_co.jpg",
+  },
+  "Kim Đan": {
+    breakthrough:
+      "Vận chuyển toàn bộ chân khí trong đan điền, nén ép và tôi luyện liên tục cho đến khi ngưng kết thành một khối kim đan sáng rực — cột mốc quan trọng bậc nhất của người tu tiên.",
+    qi: "Linh khí trời đất được hấp thụ ồ ạt để nuôi dưỡng và làm kim đan thêm tinh thuần, mỗi vòng vận chuyển đều luyện hóa tạp chất.",
+    core: "Kim đan chính thức hình thành, trở thành nguồn năng lượng lõi, thay thế đan điền phàm tục.",
+    lifespan: "Thọ nguyên tăng thêm khoảng 200–300 năm, đạt mốc 600–800 năm.",
+    power: "Có thể ngự kiếm bay xa vạn dặm, một đợt công kích đủ sức san phẳng núi nhỏ.",
+    image: "kim_dan.jpg",
+  },
+  "Nguyên Anh": {
+    breakthrough:
+      "Kim đan vỡ ra, nguyên thần ngưng tụ thành một nguyên anh nhỏ bé mang hình dáng bản thân, ẩn cư trong khí hải.",
+    qi: "Linh khí được hấp thụ trực tiếp để bồi dưỡng nguyên anh, giúp nguyên thần ngày càng vững chắc.",
+    core: "Kim đan tan biến, nhường chỗ cho nguyên anh — một dạng &quot;đan&quot; cao cấp hơn, gần như bất diệt trừ khi nguyên thần bị hủy.",
+    lifespan: "Thọ nguyên tăng thêm khoảng 400–600 năm, đạt mốc 1000–1500 năm.",
+    power: "Nguyên anh có thể xuất khiếu, thi triển thần thông, một kiếm chém ngang có thể phá thành lớn.",
+    image: "nguyen_anh.jpg",
+  },
+  "Hóa Thần": {
+    breakthrough:
+      "Nguyên anh hòa hợp cùng thiên địa pháp tắc, hóa thành nguyên thần chân chính, bắt đầu cảm ứng được thiên kiếp.",
+    qi: "Không chỉ hấp thụ linh khí, còn học cách dung hòa quy tắc trời đất vào bản thân.",
+    core: "Nguyên anh chuyển hóa thành nguyên thần, pháp lực vận hành tự nhiên như hơi thở.",
+    lifespan: "Thọ nguyên tăng thêm khoảng 600–1000 năm, đạt mốc 2000–2500 năm.",
+    power: "Có thể khống chế một vùng trời đất nhỏ, uy lực đủ sức lay chuyển sông núi. Từ đây trở đi, mỗi lần đột phá phải vượt qua thiên kiếp.",
+    image: "hoa_than.jpg",
+  },
+  "Luyện Hư": {
+    breakthrough:
+      "Luyện hóa nguyên thần dung nhập vào hư không, thân thể dần thoát ly ràng buộc của thực chất.",
+    qi: "Hấp thụ linh khí ở tầng không gian hư vô, linh khí thô thiển của phàm giới không còn đủ để bồi dưỡng.",
+    core: "Nguyên thần và hư không hòa làm một, có thể phân thân, ẩn hiện khó lường.",
+    lifespan: "Thọ nguyên tăng thêm khoảng 1000–1500 năm, đạt mốc 3000–3500 năm.",
+    power: "Một niệm có thể khuynh đảo phong vân, sức mạnh sánh ngang thiên tai.",
+    image: "luyen_hu.jpg",
+  },
+  "Hợp Thể": {
+    breakthrough:
+      "Dung hợp nhục thân phàm tục với nguyên thần đã luyện hư, hợp nhất thành một thể hoàn chỉnh cận tiên.",
+    qi: "Linh khí trời đất được hấp thụ và chuyển hóa trực tiếp thành huyết nhục, thân thể cứng như tiên khí ngưng tụ.",
+    core: "Không còn phân biệt đan điền – nguyên thần, toàn thân là một khối năng lượng thuần khiết.",
+    lifespan: "Thọ nguyên tăng thêm khoảng 1500–2000 năm, đạt mốc 4000–4500 năm.",
+    power: "Nhục thân cường đến mức đao thương bất nhập, một quyền có thể phá vỡ hư không nhỏ.",
+    image: "hop_the.jpg",
+  },
+  "Đại Thừa": {
+    breakthrough:
+      "Tu vi đạt đến đỉnh phong của phàm giới, thấu hiểu gần trọn quy luật thiên đạo, chỉ còn chờ một kiếp cuối cùng để phi thăng.",
+    qi: "Linh khí trời đất tự động quy tụ về người tu luyện, gần như không còn giới hạn hấp thụ.",
+    core: "Toàn thân đã là một &quot;đại đan&quot; sống, sẵn sàng chuyển hóa hoàn toàn thành tiên thể.",
+    lifespan: "Thọ nguyên tăng thêm khoảng 2000–3000 năm, đạt mốc 5000–6000 năm.",
+    power: "Uy áp ngang tầm bán tiên, một chiêu có thể hủy diệt cả một vùng đại lục nếu không kiêng dè.",
+    image: "dai_thua.jpg",
+  },
+  "Độ Kiếp": {
+    breakthrough:
+      "Chủ động dẫn thiên kiếp giáng xuống, dùng ý chí và pháp lực gồng mình chống chọi từng đợt sét trời để tẩy tận phàm thai, đổi sang tiên cốt.",
+    qi: "Không còn hấp thụ linh khí theo cách thông thường — thay vào đó hòa mình vào long mạch thiên địa để mượn lực chống kiếp.",
+    core: "Toàn bộ tu vi được tôi luyện qua lửa kiếp, kết tinh thành &quot;tiên thai&quot;, tiền đề để phi thăng thượng giới.",
+    lifespan: "Vượt qua thiên kiếp, thọ nguyên tăng vọt thêm khoảng 5000 năm, chính thức bước chân vào hàng bán tiên trường sinh.",
+    power: "Uy lực đạt đến mức nghiêng trời lệch đất — không vượt qua được sẽ hồn phi phách tán, nhưng vượt qua được thì uy danh chấn động tam giới.",
+    image: "do_kiep.jpg",
+  },
+};
 const TITLE_NAMES = [
   "Phàm Nhân",
   "Tu Sĩ",
@@ -2132,6 +2224,34 @@ function renderRoadmap() {
 
   document.getElementById("perTopicNote").textContent =
     `Đại nguyện ${goal} ÷ ${getActiveTopics().length} công pháp ≈ ${perCp} chiêu thức mỗi công pháp — đây là mốc để một công pháp đạt Độ Kiếp riêng của nó.`;
+
+  renderRealmLore();
+}
+
+function renderRealmLore() {
+  const wrap = document.getElementById("realmLoreList");
+  if (!wrap) return;
+  wrap.innerHTML = REALM_NAMES.map((name) => {
+    const lore = REALM_LORE[name];
+    if (!lore) return "";
+    const imageHtml = lore.image
+      ? `<img src="/stages/${lore.image}" alt="${name}" loading="lazy">`
+      : `<span>Chưa có tranh minh họa</span>`;
+    return `
+      <div class="realm-lore-item">
+        <div class="realm-lore-image${lore.image ? "" : " no-image"}">${imageHtml}</div>
+        <div class="realm-lore-text">
+          <h4 class="serif">${name}</h4>
+          <ul>
+            <li><strong>Đột phá:</strong> ${lore.breakthrough}</li>
+            <li><strong>Hấp thụ linh khí:</strong> ${lore.qi}</li>
+            <li><strong>Kết đan:</strong> ${lore.core}</li>
+            <li><strong>Thọ nguyên:</strong> ${lore.lifespan}</li>
+            <li><strong>Uy lực:</strong> ${lore.power}</li>
+          </ul>
+        </div>
+      </div>`;
+  }).join("");
 }
 
 function renderLegends() {

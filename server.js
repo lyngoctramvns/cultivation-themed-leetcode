@@ -10,6 +10,8 @@ const HTML_FILE = path.join(ROOT, "Tu Tiên Chi Lộ — LeetCode.html");
 const LEGACY_DB_FILE = path.join(DATA_DIR, "db.json");
 const LEGACY_LEGENDS_FILE = path.join(DATA_DIR, "truyenky.json");
 const PLAYER_FILE_RE = /^db_([a-z0-9]{1,60})\.json$/;
+const STAGES_DIR = path.join(ROOT, "stages");
+const STAGE_IMAGE_RE = /^\/stages\/([a-z_]+\.jpg)$/;
 const SECTS_FILE = path.join(DATA_DIR, "sects.json");
 const SECT_ROLE_KEYS = [
   "master",
@@ -310,6 +312,21 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       res.writeHead(200, { "Content-Type": staticFile.type });
+      res.end(content);
+    });
+    return;
+  }
+
+  const stageMatch = req.method === "GET" ? pathname.match(STAGE_IMAGE_RE) : null;
+  if (stageMatch) {
+    const filePath = path.join(STAGES_DIR, stageMatch[1]);
+    fs.readFile(filePath, (err, content) => {
+      if (err) {
+        res.writeHead(404);
+        res.end("Not found");
+        return;
+      }
+      res.writeHead(200, { "Content-Type": "image/jpeg" });
       res.end(content);
     });
     return;
