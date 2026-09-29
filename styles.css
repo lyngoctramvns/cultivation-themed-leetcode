@@ -12,6 +12,9 @@
   --text: #ede4d3;
   --text-dim: #9aa0b8;
   --danger: #c0524a;
+  --radius-control: 10px;
+  --radius-card: 14px;
+  --radius-panel: 18px;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -22,6 +25,7 @@ html,
 body {
   height: 100%;
   margin: 0;
+  overflow-x: hidden;
 }
 body {
   background: var(--bg);
@@ -66,31 +70,35 @@ h3,
 }
 .tabs {
   display: flex;
-  gap: 6px;
-  margin-bottom: 20px;
-  border-bottom: 1px solid var(--line);
+  gap: 4px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 20px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(17, 22, 42, 0.72);
 }
 .tab {
   padding: 10px 16px;
   cursor: pointer;
   color: var(--text-dim);
-  border-bottom: 2px solid transparent;
+  border: 0;
   font-size: 0.92rem;
   background: var(--tab-bg);
-  border-top: none;
-  border-left: none;
-  border-right: none;
   font-family: inherit;
-  border-radius: 8px 8px 0 0;
-  transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+  border-radius: 999px;
+  white-space: nowrap;
+  transition: color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
 }
 .tab:hover {
-  color: #181205;
-  background: var(--gold);
+  color: var(--text);
+  background: rgba(212, 175, 55, 0.14);
 }
 .tab.active {
-  color: var(--gold);
-  border-bottom-color: var(--gold);
+  color: #181205;
+  background: var(--gold);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.24);
 }
 .tab.active:hover {
   color: #181205;
@@ -105,7 +113,7 @@ h3,
 .card {
   background: var(--panel-bg);
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: var(--radius-card);
   padding: 18px;
   margin-bottom: 16px;
 }
@@ -240,7 +248,7 @@ input[type="color"] {
   padding: 2px;
   background: var(--bg2);
   border: 1px solid var(--line);
-  border-radius: 4px;
+  border-radius: var(--radius-control);
   cursor: pointer;
 }
 input[type="range"] {
@@ -253,7 +261,7 @@ input[type="range"] {
 }
 .today-status {
   padding: 10px 14px;
-  border-radius: 5px;
+  border-radius: var(--radius-control);
   font-size: 0.88rem;
   margin-top: 10px;
 }
@@ -284,7 +292,7 @@ input[type="number"] {
   border: 1px solid var(--line);
   color: var(--text);
   padding: 9px 10px;
-  border-radius: 4px;
+  border-radius: var(--radius-control);
   font-family: inherit;
   font-size: 0.9rem;
 }
@@ -295,7 +303,7 @@ textarea {
   border: 1px solid var(--line);
   color: #cfe8d6;
   padding: 12px;
-  border-radius: 4px;
+  border-radius: var(--radius-control);
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 0.85rem;
   line-height: 1.5;
@@ -307,7 +315,7 @@ textarea {
   max-height: 92vh;
   padding: 18px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: var(--radius-panel);
   background: var(--panel-bg);
   color: var(--text);
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
@@ -343,7 +351,7 @@ textarea {
   gap: 10px;
   padding: 10px 12px;
   border: 1px solid var(--line);
-  border-radius: 4px;
+  border-radius: var(--radius-control);
   background: var(--bg2);
   color: var(--text);
   font: inherit;
@@ -433,7 +441,7 @@ button.primary {
   color: #181205;
   border: none;
   padding: 11px 20px;
-  border-radius: 8px;
+  border-radius: 999px;
   font-weight: 600;
   cursor: pointer;
   margin-top: 16px;
@@ -450,7 +458,7 @@ button.ghost {
   border: 1px solid var(--line);
   color: var(--text-dim);
   padding: 7px 12px;
-  border-radius: 8px;
+  border-radius: 999px;
   cursor: pointer;
   font-size: 0.82rem;
   transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
@@ -489,7 +497,7 @@ button.ghost:hover {
 .bar {
   height: 6px;
   background: var(--bg2);
-  border-radius: 3px;
+  border-radius: 999px;
   overflow: hidden;
 }
 .bar-fill {
@@ -535,7 +543,7 @@ tr.solved-row:hover {
   display: none;
   background: #0b0f1c;
   border: 1px solid var(--line);
-  border-radius: 4px;
+  border-radius: var(--radius-control);
   padding: 12px;
   margin-top: 6px;
   white-space: pre-wrap;
@@ -561,7 +569,7 @@ tr.solved-row:hover {
 }
 .cal-cell {
   aspect-ratio: 1;
-  border-radius: 4px;
+  border-radius: 8px;
   background: var(--bg2);
   display: flex;
   align-items: center;
@@ -625,7 +633,8 @@ tr.goal-row td {
 @media (max-width: 700px) {
   .app {
     width: 100%;
-    padding: 14px 12px 32px;
+    max-width: none;
+    padding: 14px 16px 32px;
   }
   .header {
     align-items: center;
@@ -638,9 +647,12 @@ tr.goal-row td {
   .tabs {
     position: relative;
     display: block;
-    margin: 0 -12px 16px;
-    padding: 0 12px;
-    border-bottom: 0;
+    width: auto;
+    margin: 0 0 16px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
     z-index: 2;
   }
   .mobile-nav-toggle {
@@ -651,7 +663,7 @@ tr.goal-row td {
     min-height: 48px;
     padding: 0 14px;
     border: 1px solid var(--line);
-    border-radius: 6px;
+    border-radius: 16px;
     background: var(--tab-bg);
     color: var(--text);
     font: inherit;
@@ -702,13 +714,13 @@ tr.goal-row td {
     display: none;
     position: absolute;
     top: calc(100% + 6px);
-    right: 12px;
-    left: 12px;
+    right: 0;
+    left: 0;
     max-height: min(var(--mobile-menu-max-height, 70vh), 480px);
     overflow-y: auto;
     padding: 6px;
     border: 1px solid var(--line);
-    border-radius: 6px;
+    border-radius: 16px;
     background: var(--panel-bg);
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.38);
   }
@@ -721,13 +733,13 @@ tr.goal-row td {
     min-height: 44px;
     padding: 10px 12px;
     border: 0;
-    border-radius: 4px;
+    border-radius: 12px;
     text-align: left;
   }
   .tab.active {
-    border-left: 2px solid var(--gold);
-    color: var(--gold);
-    background: rgba(212, 175, 55, 0.08);
+    border-left: 0;
+    color: #181205;
+    background: var(--gold);
   }
   .card {
     padding: 14px;
@@ -771,7 +783,7 @@ tr.goal-row td {
     min-height: 42px;
     padding: 9px 12px;
     border: 1px solid var(--line);
-    border-radius: 4px;
+    border-radius: var(--radius-control);
     background: var(--bg2);
     color: var(--text);
     font: inherit;
@@ -817,7 +829,7 @@ tr.goal-row td {
     overscroll-behavior: contain;
     padding: 5px;
     border: 1px solid var(--line);
-    border-radius: 5px;
+    border-radius: var(--radius-panel);
     background: var(--panel-bg);
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
     -webkit-overflow-scrolling: touch;
@@ -828,7 +840,7 @@ tr.goal-row td {
     width: 100%;
     min-height: 42px;
     padding: 9px 10px;
-    border-radius: 3px;
+    border-radius: var(--radius-control);
     color: var(--text);
     font-size: 0.88rem;
     line-height: 1.35;

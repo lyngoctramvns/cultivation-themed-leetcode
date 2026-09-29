@@ -21,6 +21,18 @@ const SECT_ROLE_KEYS = [
   "daoCompanion",
 ];
 const STATIC_FILES = {
+  "/manifest.webmanifest": {
+    file: path.join(ROOT, "manifest.webmanifest"),
+    type: "application/manifest+json; charset=utf-8",
+  },
+  "/sw.js": {
+    file: path.join(ROOT, "sw.js"),
+    type: "application/javascript; charset=utf-8",
+  },
+  "/icon.svg": {
+    file: path.join(ROOT, "icon.svg"),
+    type: "image/svg+xml",
+  },
   "/styles.css": {
     file: path.join(ROOT, "styles.css"),
     type: "text/css; charset=utf-8",

@@ -1,0 +1,20 @@
+{
+  "name": "Tu Tiên Chi Lộ",
+  "short_name": "Tu Tiên Chi Lộ",
+  "description": "Theo dõi hành trình tu luyện và các chiêu thức LeetCode.",
+  "lang": "vi",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b0e1a",
+  "theme_color": "#0b0e1a",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
