@@ -1041,6 +1041,87 @@ function updateMobileSelectPresentation() {
 
 setupMobileSelectPickers();
 
+function setupDatalistPickers() {
+  document.querySelectorAll("input[list]").forEach((input) => {
+    const list = document.getElementById(input.getAttribute("list"));
+    if (!list || input.closest(".datalist-picker")) return;
+
+    const wrapper = document.createElement("div");
+    const menu = document.createElement("div");
+    wrapper.className = "datalist-picker";
+    menu.className = "datalist-picker-menu";
+    menu.setAttribute("role", "listbox");
+    input.parentElement.insertBefore(wrapper, input);
+    wrapper.append(input, menu);
+    input.removeAttribute("list");
+
+    function getOptions() {
+      return Array.from(list.options)
+        .map((option) => option.value.trim())
+        .filter((value, index, values) => value && values.indexOf(value) === index);
+    }
+
+    function renderOptions() {
+      const query = input.value.trim().toLocaleLowerCase("vi");
+      const options = getOptions().filter((value) =>
+        value.toLocaleLowerCase("vi").includes(query),
+      );
+      menu.replaceChildren();
+      options.forEach((value) => {
+        const option = document.createElement("button");
+        option.type = "button";
+        option.className = "datalist-picker-option";
+        option.setAttribute("role", "option");
+        option.dataset.value = value;
+        option.textContent = value;
+        option.classList.toggle("selected", value === input.value.trim());
+        menu.appendChild(option);
+      });
+      menu.classList.toggle("open", options.length > 0);
+    }
+
+    function closeMenu() {
+      menu.classList.remove("open");
+    }
+
+    input.addEventListener("focus", renderOptions);
+    input.addEventListener("click", renderOptions);
+    input.addEventListener("input", renderOptions);
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeMenu();
+        return;
+      }
+      if (event.key === "ArrowDown" && menu.classList.contains("open")) {
+        event.preventDefault();
+        menu.querySelector(".datalist-picker-option")?.focus();
+      }
+    });
+    menu.addEventListener("click", (event) => {
+      const option = event.target.closest(".datalist-picker-option");
+      if (!option) return;
+      input.value = option.dataset.value;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      closeMenu();
+      input.focus();
+    });
+    menu.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeMenu();
+        input.focus();
+      }
+    });
+    new MutationObserver(renderOptions).observe(list, {
+      childList: true,
+      subtree: true,
+    });
+  });
+}
+
+setupDatalistPickers();
+
 mobileNavToggle.addEventListener("click", () => {
   const isOpen = tabNavigation.classList.toggle("open");
   mobileNavToggle.setAttribute("aria-expanded", String(isOpen));
@@ -1061,6 +1142,9 @@ window.visualViewport?.addEventListener("scroll", positionMobileSelectMenu);
 
 document.addEventListener("click", (event) => {
   if (!tabNavigation.contains(event.target)) closeMobileNav();
+  document.querySelectorAll(".datalist-picker-menu.open").forEach((menu) => {
+    if (!menu.parentElement.contains(event.target)) menu.classList.remove("open");
+  });
   if (
     activeMobileSelect &&
     !mobileSelectMenu.contains(event.target) &&

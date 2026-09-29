@@ -293,8 +293,75 @@ input[type="number"] {
   color: var(--text);
   padding: 9px 10px;
   border-radius: var(--radius-control);
-  font-family: inherit;
+  font-family: "Noto Serif", Georgia, serif;
   font-size: 0.9rem;
+}
+.datalist-picker {
+  position: relative;
+  width: 100%;
+}
+.datalist-picker::after {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  width: 8px;
+  height: 8px;
+  border-right: 1.5px solid var(--text-dim);
+  border-bottom: 1.5px solid var(--text-dim);
+  content: "";
+  pointer-events: none;
+  transform: translateY(-65%) rotate(45deg);
+}
+.datalist-picker > input {
+  padding-right: 38px;
+}
+.datalist-picker:focus-within::after {
+  border-color: var(--gold);
+}
+.datalist-picker-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  z-index: 30;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--panel-bg);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+.datalist-picker-menu.open {
+  display: block;
+}
+.datalist-picker-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.datalist-picker-option.selected {
+  background: rgba(212, 175, 55, 0.12);
+  color: var(--gold);
+}
+.datalist-picker-option:hover,
+.datalist-picker-option:focus-visible {
+  outline: none;
+  background: rgba(212, 175, 55, 0.16);
+  color: var(--gold);
 }
 textarea {
   width: 100%;
@@ -304,11 +371,15 @@ textarea {
   color: #cfe8d6;
   padding: 12px;
   border-radius: var(--radius-control);
-  font-family: "SFMono-Regular", Consolas, monospace;
+  font-family: "Noto Serif", Georgia, serif;
   font-size: 0.85rem;
   line-height: 1.5;
   tab-size: 2;
   resize: vertical;
+}
+#codeInput,
+.textarea-editor-input.code-editor {
+  font-family: "SFMono-Regular", Consolas, monospace;
 }
 .textarea-editor {
   width: min(860px, calc(100vw - 32px));
@@ -761,6 +832,9 @@ tr.goal-row td {
     display: block;
     width: 100%;
     min-width: 0;
+  }
+  .datalist-picker-menu {
+    max-height: min(45vh, 240px);
   }
   .select-picker > select {
     position: absolute;
