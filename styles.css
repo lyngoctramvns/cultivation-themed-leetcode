@@ -722,6 +722,50 @@ tr.goal-row td {
 .legend-text {
   min-height: 220px;
 }
+.sect-registry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sect-registry-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+.sect-registry-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--bg2);
+}
+.sect-registry-name {
+  min-width: 0;
+  color: var(--text);
+  font-family: "Noto Serif", Georgia, serif;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.sect-registry-actions {
+  display: flex;
+  flex: none;
+  gap: 6px;
+}
+.sect-registry-actions .ghost {
+  padding: 6px 10px;
+}
+@media (max-width: 700px) {
+  .sect-registry-item {
+    align-items: flex-start;
+  }
+  .sect-registry-actions {
+    flex-direction: column;
+  }
+}
 .mobile-nav-toggle {
   display: none;
 }

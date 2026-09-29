@@ -1386,12 +1386,13 @@ function renderSect() {
   document.getElementById("sectDescription").value = sect.description;
   populateSectNameDatalist();
   populateSectRoleDatalists(getRegistrySectEntry(sect.name));
+  renderSectRegistry();
 }
 
 function fillDatalist(id, labels) {
   const list = document.getElementById(id);
   if (!list) return;
-  list.innerHTML = labels
+  list.innerHTML = [...new Set(labels.map((label) => String(label || "").trim()).filter(Boolean))]
     .map((label) => `<option value="${escapeHtml(label)}"></option>`)
     .join("");
 }
@@ -1402,17 +1403,106 @@ function getRegistrySectEntry(name) {
 function populateSectNameDatalist() {
   fillDatalist(
     "sectNameList",
-    Object.values(sectsRegistry).map((entry) => entry.name),
+    Object.values(sectsRegistry)
+      .map((entry) => entry.name)
+      .concat(db.sect.name),
   );
 }
 function populateSectRoleDatalists(entry) {
+  const selectedSectName = document.getElementById("sectName").value;
+  const isCurrentSect =
+    slugifyName(selectedSectName) === slugifyName(db.sect.name);
   SECT_RELATIONS.forEach(({ key, inputId }) => {
     const people = (entry && entry.roles && entry.roles[key]) || {};
     fillDatalist(
       `${inputId}List`,
-      Object.values(people).map((p) => p.name),
+      Object.values(people)
+        .map((p) => p.name)
+        .concat(isCurrentSect ? db.sect[key] : ""),
     );
   });
+}
+
+function renderSectRegistry() {
+  const list = document.getElementById("sectRegistryList");
+  const empty = document.getElementById("sectRegistryEmpty");
+  if (!list || !empty) return;
+  list.replaceChildren();
+  const entries = Object.entries(sectsRegistry).filter(([, entry]) => entry?.name);
+  empty.style.display = entries.length ? "none" : "block";
+  entries.forEach(([slug, entry]) => {
+    const item = document.createElement("div");
+    item.className = "sect-registry-item";
+    const name = document.createElement("div");
+    name.className = "sect-registry-name";
+    name.textContent = entry.name;
+    const actions = document.createElement("div");
+    actions.className = "sect-registry-actions";
+    const selectButton = document.createElement("button");
+    selectButton.type = "button";
+    selectButton.className = "ghost sect-select-button";
+    selectButton.dataset.slug = slug;
+    selectButton.textContent = "Chọn";
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "ghost sect-delete-button";
+    deleteButton.dataset.slug = slug;
+    deleteButton.textContent = "Xóa";
+    deleteButton.setAttribute("aria-label", `Xóa tông môn ${entry.name}`);
+    actions.append(selectButton, deleteButton);
+    item.append(name, actions);
+    list.appendChild(item);
+  });
+}
+
+function loadSectIntoForm(entry) {
+  const sect = normalizeSect({ ...entry, status: "joined" });
+  document.getElementById("sectDetails").style.display = "block";
+  document.getElementById("sectName").value = sect.name;
+  SECT_RELATIONS.forEach(({ key, inputId }) => {
+    document.getElementById(inputId).value = sect[key];
+    document.getElementById(`${inputId}Description`).value =
+      sect[`${key}Description`];
+  });
+  document.getElementById("sectDescription").value = sect.description;
+  populateSectRoleDatalists(entry);
+  document.getElementById("sectFormStatus").textContent =
+    `Đã nạp thông tin ${sect.name}. Bấm lưu để áp dụng cho đạo hữu hiện tại.`;
+}
+
+function clearSectForm() {
+  document.getElementById("sectDetails").style.display = "block";
+  document.getElementById("sectName").value = "";
+  SECT_RELATIONS.forEach(({ inputId }) => {
+    document.getElementById(inputId).value = "";
+    document.getElementById(`${inputId}Description`).value = "";
+  });
+  document.getElementById("sectDescription").value = "";
+  populateSectRoleDatalists(null);
+  document.getElementById("sectFormStatus").textContent =
+    "Đã mở form tông môn mới.";
+  document.getElementById("sectName").focus();
+}
+
+async function deleteSectFromRegistry(slug) {
+  if (USE_SECTS_API) {
+    try {
+      const response = await fetch(`/api/sects?player=${encodeURIComponent(slug)}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) return false;
+    } catch (error) {
+      USE_SECTS_API = false;
+    }
+  }
+  if (!USE_SECTS_API) {
+    delete sectsRegistry[slug];
+    saveLocalSectsRegistry();
+  } else {
+    delete sectsRegistry[slug];
+    saveLocalSectsRegistry();
+  }
+  return true;
 }
 
 document.getElementById("sectName").addEventListener("input", () => {
@@ -1474,11 +1564,31 @@ document.getElementById("saveSect").onclick = () => {
   persistSectToRegistry(db.sect);
   populateSectNameDatalist();
   populateSectRoleDatalists(getRegistrySectEntry(db.sect.name));
+  renderSectRegistry();
   document.getElementById("sectStatus").textContent =
     `Đang bái nhập ${db.sect.name || "tông môn"}.`;
   document.getElementById("sectFormStatus").textContent =
     "Thông tin tông môn đã được lưu.";
 };
+
+document.getElementById("addSectBtn").onclick = clearSectForm;
+document.getElementById("sectRegistryList").addEventListener("click", async (event) => {
+  const selectButton = event.target.closest(".sect-select-button");
+  if (selectButton) {
+    loadSectIntoForm(sectsRegistry[selectButton.dataset.slug]);
+    return;
+  }
+  const deleteButton = event.target.closest(".sect-delete-button");
+  if (!deleteButton) return;
+  const entry = sectsRegistry[deleteButton.dataset.slug];
+  if (!entry || !confirm(`Xóa tông môn ${entry.name} khỏi danh sách chung?`)) return;
+  const deleted = await deleteSectFromRegistry(deleteButton.dataset.slug);
+  if (!deleted) return;
+  renderSectRegistry();
+  populateSectNameDatalist();
+  document.getElementById("sectRegistryStatus").textContent =
+    `Đã xóa tông môn ${entry.name} khỏi danh sách chung.`;
+});
 
 function endSectMembership(status) {
   const message =

@@ -271,6 +271,22 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (pathname === "/api/sects" && req.method === "DELETE") {
+    if (!isValidSlug(slug)) {
+      sendJSON(res, 400, { ok: false, error: "Missing or invalid sect" });
+      return;
+    }
+    const registry = readSectsRegistry();
+    if (!Object.prototype.hasOwnProperty.call(registry, slug)) {
+      sendJSON(res, 404, { ok: false, error: "Sect not found" });
+      return;
+    }
+    delete registry[slug];
+    writeSectsRegistry(registry);
+    sendJSON(res, 200, { ok: true });
+    return;
+  }
+
   if (pathname === "/api/sects" && req.method === "POST") {
     try {
       const body = await readRequestBody(req);
