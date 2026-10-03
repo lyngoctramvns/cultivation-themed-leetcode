@@ -60,11 +60,20 @@ const PATH_DEFS = {
     ],
   },
 };
+function getAllPathDefs() {
+  return { ...PATH_DEFS, ...customDaos };
+}
+function getAllDaoList() {
+  return [
+    ...DAO_LIST,
+    ...Object.values(customDaos).map((d) => ({ id: d.id, name: d.name })),
+  ];
+}
 function getActivePath() {
-  return PATH_DEFS[db.settings.activePath] ? db.settings.activePath : DEFAULT_PATH;
+  return getAllPathDefs()[db.settings.activePath] ? db.settings.activePath : DEFAULT_PATH;
 }
 function getPathConfig(pathId = getActivePath()) {
-  return PATH_DEFS[pathId] || PATH_DEFS[DEFAULT_PATH];
+  return getAllPathDefs()[pathId] || getAllPathDefs()[DEFAULT_PATH];
 }
 function getActiveTopics() {
   return getPathConfig().topics;
@@ -75,7 +84,7 @@ function getTopicConfig(topicId, pathId = getActivePath()) {
 function tenCongPhap(topicId) {
   const topic = getTopicConfig(topicId);
   if (!topic) return topicId;
-  return `${topic.name} (${topic.subtitle})`;
+  return topic.subtitle ? `${topic.name} (${topic.subtitle})` : topic.name;
 }
 function getLanguageOptionsFor(topicId) {
   const cfg = getPathConfig();
@@ -314,10 +323,14 @@ const LEGENDS_API_URL = "/api/legends";
 const ACTIVE_PLAYER_KEY = "congphap_active_player";
 const SECTS_REGISTRY_KEY = "congphap_sects_registry";
 const SECTS_API_URL = "/api/sects";
+const DAOS_KEY = "congphap_custom_daos";
+const DAOS_API_URL = "/api/daos";
 let USE_API = false; // becomes true once /api/db (server.js + db.json) is confirmed reachable
 let USE_SECTS_API = false;
+let USE_DAOS_API = false;
 let legends = {};
 let sectsRegistry = {};
+let customDaos = {};
 let activePlayerSlug = null;
 function slugifyName(name) {
   return String(name || "")
@@ -472,7 +485,7 @@ function defaultPathData() {
 }
 function defaultDB() {
   const paths = {};
-  Object.keys(PATH_DEFS).forEach((id) => {
+  Object.keys(getAllPathDefs()).forEach((id) => {
     paths[id] = defaultPathData();
   });
   return {
@@ -492,7 +505,7 @@ function normalizeDB(d) {
   d.player = d.player || {};
   d.player.name = typeof d.player.name === "string" ? d.player.name : "";
   d.settings = d.settings || {};
-  if (!PATH_DEFS[d.settings.activePath]) d.settings.activePath = DEFAULT_PATH;
+  if (!getAllPathDefs()[d.settings.activePath]) d.settings.activePath = DEFAULT_PATH;
 
   const legacyProblems = Array.isArray(d.problems) ? d.problems : null;
   const legacyDailyTarget = Number(d.player.dailyTarget) > 0 ? Number(d.player.dailyTarget) : null;
@@ -502,7 +515,7 @@ function normalizeDB(d) {
   delete d.problems;
 
   d.paths = d.paths && typeof d.paths === "object" ? d.paths : {};
-  Object.keys(PATH_DEFS).forEach((pathId) => {
+  Object.keys(getAllPathDefs()).forEach((pathId) => {
     const existing =
       d.paths[pathId] && typeof d.paths[pathId] === "object" ? d.paths[pathId] : {};
     d.paths[pathId] = {
@@ -630,6 +643,60 @@ function persistSectToRegistry(sect) {
     }).catch(() => {
       USE_SECTS_API = false;
     });
+  }
+}
+
+// Shared registry of user-created "đạo" (custom path: name + công pháp + ngôn ngữ), reusable across players.
+function loadLocalDaos() {
+  try {
+    return JSON.parse(localStorage.getItem(DAOS_KEY)) || {};
+  } catch (e) {
+    return {};
+  }
+}
+function saveLocalDaos() {
+  try {
+    localStorage.setItem(DAOS_KEY, JSON.stringify(customDaos));
+  } catch (e) {}
+}
+async function loadDaos() {
+  try {
+    const res = await fetch(DAOS_API_URL, { cache: "no-store" });
+    if (res.ok) {
+      USE_DAOS_API = true;
+      return await res.json();
+    }
+  } catch (e) {
+    /* server.js not running — fall back to local registry */
+  }
+  USE_DAOS_API = false;
+  return loadLocalDaos();
+}
+function persistDao(dao) {
+  customDaos[dao.id] = dao;
+  saveLocalDaos();
+  if (USE_DAOS_API) {
+    fetch(DAOS_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dao }),
+    }).catch(() => {
+      USE_DAOS_API = false;
+    });
+  }
+}
+async function removeDao(id) {
+  delete customDaos[id];
+  saveLocalDaos();
+  if (USE_DAOS_API) {
+    try {
+      const res = await fetch(`${DAOS_API_URL}?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      if (!res.ok && res.status !== 404) USE_DAOS_API = false;
+    } catch (e) {
+      USE_DAOS_API = false;
+    }
   }
 }
 
@@ -797,7 +864,194 @@ document.getElementById("nameDialogForm").addEventListener("submit", (event) => 
 document.getElementById("cancelNameDialog").onclick = () =>
   nameDialog.close("cancel");
 
-const playerDialog = document.getElementById("playerDialog");
+// Dao wizard: lets a (new or existing) player define a custom đạo — name, số lượng
+// công pháp, and ngôn ngữ riêng cho từng công pháp — instead of fixed PATH_DEFS.
+const daoWizardDialog = document.getElementById("daoWizardDialog");
+const daoWizardForm = document.getElementById("daoWizardForm");
+const daoWizardNameField = document.getElementById("daoWizardNameField");
+const daoWizardPlayerName = document.getElementById("daoWizardPlayerName");
+const daoWizardPlayerNameError = document.getElementById("daoWizardPlayerNameError");
+const daoWizardDaoName = document.getElementById("daoWizardDaoName");
+const daoWizardDaoNameError = document.getElementById("daoWizardDaoNameError");
+const daoWizardTopicCount = document.getElementById("daoWizardTopicCount");
+const daoWizardTopicsList = document.getElementById("daoWizardTopicsList");
+const daoWizardError = document.getElementById("daoWizardError");
+const daoWizardPreview = document.getElementById("daoWizardPreview");
+const cancelDaoWizard = document.getElementById("cancelDaoWizard");
+let daoWizardEditingId = null;
+
+function readDaoTopicRows() {
+  return Array.from(daoWizardTopicsList.querySelectorAll(".dao-topic-row")).map((row) => ({
+    name: row.querySelector(".dao-topic-name").value.trim(),
+    langsText: row.querySelector(".dao-topic-langs").value.trim(),
+  }));
+}
+function renderDaoTopicRows(count, previousRows) {
+  const rows = previousRows || readDaoTopicRows();
+  daoWizardTopicsList.innerHTML = "";
+  for (let i = 0; i < count; i++) {
+    const data = rows[i] || { name: "", langsText: "" };
+    const row = document.createElement("div");
+    row.className = "dao-topic-row";
+    row.innerHTML = `
+      <div>
+        <label>Công pháp #${i + 1} — Tên</label>
+        <input type="text" class="dao-topic-name" placeholder="Vd: Kiếm Pháp Nhập Môn" value="${data.name.replace(/"/g, "&quot;")}">
+      </div>
+      <div>
+        <label>Ngôn ngữ / chủ đề (cách nhau bởi dấu phẩy)</label>
+        <input type="text" class="dao-topic-langs" placeholder="Vd: Python, JavaScript" value="${data.langsText.replace(/"/g, "&quot;")}">
+      </div>`;
+    daoWizardTopicsList.appendChild(row);
+  }
+  renderDaoWizardPreview();
+}
+function renderDaoWizardPreview() {
+  const rows = readDaoTopicRows();
+  if (!rows.some((r) => r.name || r.langsText)) {
+    daoWizardPreview.innerHTML = `<div class="setup-note">Điền thông tin công pháp để xem trước.</div>`;
+    return;
+  }
+  const items = rows
+    .map(
+      (r, i) =>
+        `<tr><td>${r.name || `Công pháp #${i + 1}`}</td><td>${r.langsText || "—"}</td></tr>`,
+    )
+    .join("");
+  daoWizardPreview.innerHTML = `<table><thead><tr><th>Công pháp</th><th>Ngôn ngữ</th></tr></thead><tbody>${items}</tbody></table>`;
+}
+daoWizardTopicsList.addEventListener("input", renderDaoWizardPreview);
+daoWizardTopicCount.addEventListener("input", () => {
+  const count = Math.min(20, Math.max(1, parseInt(daoWizardTopicCount.value, 10) || 1));
+  renderDaoTopicRows(count);
+});
+
+function buildDaoFromWizard(initialDao) {
+  const daoName = daoWizardDaoName.value.trim();
+  const rows = readDaoTopicRows();
+  const usedTopicIds = new Set();
+  const topics = [];
+  for (let i = 0; i < rows.length; i++) {
+    const { name, langsText } = rows[i];
+    if (!name || !langsText) return null;
+    const existingTopic = initialDao && initialDao.topics[i];
+    const id =
+      (existingTopic && existingTopic.id) ||
+      (() => {
+        let base = slugifyName(name) || `congphap${i + 1}`;
+        let candidate = base;
+        let suffix = 2;
+        while (usedTopicIds.has(candidate)) candidate = `${base}${suffix++}`;
+        return candidate;
+      })();
+    usedTopicIds.add(id);
+    const existingLangs =
+      (existingTopic && existingTopic.languages) || (initialDao && initialDao.languages) || [];
+    const usedLangIds = new Set();
+    const languages = langsText
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((label) => {
+        const existingLang = (existingLangs || []).find(
+          (l) => l.label.toLowerCase() === label.toLowerCase(),
+        );
+        let base = (existingLang && existingLang.id) || slugifyName(label) || "ngonngu";
+        let candidate = base;
+        let suffix = 2;
+        while (usedLangIds.has(candidate)) candidate = `${base}${suffix++}`;
+        usedLangIds.add(candidate);
+        return { id: candidate, label };
+      });
+    if (!languages.length) return null;
+    topics.push({ id, name, subtitle: "", languages });
+  }
+  if (!daoName || !topics.length) return null;
+  const id =
+    (initialDao && initialDao.id) ||
+    (() => {
+      const existingIds = new Set(getAllDaoList().map((d) => d.id));
+      let base = slugifyName(daoName) || "dao";
+      let candidate = base;
+      let suffix = 2;
+      while (existingIds.has(candidate)) candidate = `${base}${suffix++}`;
+      return candidate;
+    })();
+  return { id, name: daoName, languageMode: "byTopic", topics };
+}
+
+function openDaoWizard({ requirePlayerName = false, initialPlayerName = "", initialDao = null, allowCancel = true } = {}) {
+  daoWizardEditingId = initialDao ? initialDao.id : null;
+  document.getElementById("daoWizardTitle").textContent = initialDao
+    ? "Chỉnh Sửa Đạo"
+    : "Khai Mở Đạo Tu Luyện";
+  daoWizardNameField.style.display = requirePlayerName ? "block" : "none";
+  daoWizardPlayerName.value = initialPlayerName;
+  daoWizardPlayerNameError.style.display = "none";
+  daoWizardDaoName.value = initialDao ? initialDao.name : "";
+  daoWizardDaoNameError.style.display = "none";
+  daoWizardError.style.display = "none";
+  cancelDaoWizard.style.display = allowCancel ? "inline-block" : "none";
+  const topicCount = initialDao ? initialDao.topics.length : 3;
+  daoWizardTopicCount.value = topicCount;
+  const initialRows = initialDao
+    ? initialDao.topics.map((t) => ({
+        name: t.name,
+        langsText: (t.languages || initialDao.languages || [])
+          .map((l) => l.label)
+          .join(", "),
+      }))
+    : [];
+  renderDaoTopicRows(topicCount, initialRows);
+  daoWizardDialog.returnValue = "";
+  const onCancel = (event) => {
+    if (!allowCancel) event.preventDefault();
+  };
+  daoWizardDialog.addEventListener("cancel", onCancel);
+  const closed = new Promise((resolve) => {
+    daoWizardDialog.addEventListener(
+      "close",
+      () => {
+        daoWizardDialog.removeEventListener("cancel", onCancel);
+        if (daoWizardDialog.returnValue !== "save") {
+          resolve(null);
+          return;
+        }
+        const dao = buildDaoFromWizard(initialDao);
+        const playerName = requirePlayerName ? daoWizardPlayerName.value.trim() : null;
+        resolve(dao ? { dao, playerName } : null);
+      },
+      { once: true },
+    );
+  });
+  daoWizardDialog.showModal();
+  (requirePlayerName && !initialPlayerName ? daoWizardPlayerName : daoWizardDaoName).focus();
+  return closed;
+}
+
+daoWizardForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const requirePlayerName = daoWizardNameField.style.display !== "none";
+  if (requirePlayerName && !daoWizardPlayerName.value.trim()) {
+    daoWizardPlayerNameError.style.display = "block";
+    daoWizardPlayerName.focus();
+    return;
+  }
+  if (!daoWizardDaoName.value.trim()) {
+    daoWizardDaoNameError.style.display = "block";
+    daoWizardDaoName.focus();
+    return;
+  }
+  const rows = readDaoTopicRows();
+  if (!rows.length || rows.some((r) => !r.name || !r.langsText)) {
+    daoWizardError.style.display = "block";
+    return;
+  }
+  daoWizardDialog.close("save");
+});
+cancelDaoWizard.onclick = () => daoWizardDialog.close("cancel");
+
+
 const playerDialogList = document.getElementById("playerDialogList");
 const playerDialogEmpty = document.getElementById("playerDialogEmpty");
 const playerDialogInput = document.getElementById("playerDialogInput");
@@ -893,7 +1147,8 @@ playerDialogList.addEventListener("click", async (event) => {
   playerDialog.close(selectButton.closest(".player-item").dataset.slug);
 });
 
-playerDialogForm.addEventListener("submit", (event) => {
+let pendingNewDaoConfig = null;
+playerDialogForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const name = playerDialogInput.value.trim();
   if (!name) {
@@ -901,6 +1156,9 @@ playerDialogForm.addEventListener("submit", (event) => {
     playerDialogInput.focus();
     return;
   }
+  const result = await openDaoWizard({ requirePlayerName: false });
+  if (!result) return;
+  pendingNewDaoConfig = result.dao;
   playerDialog.close(`__new__:${name}`);
 });
 
@@ -911,20 +1169,30 @@ async function determineActivePlayer() {
     return { slug: storedSlug, isNew: false };
   }
   if (players.length === 0) {
-    const name = (await requestPlayerName("Chọn đạo hiệu", "")) || "Vô Danh";
-    return { slug: uniqueSlugFor(name, players), isNew: true, newName: name };
+    const result = await openDaoWizard({ requirePlayerName: true, allowCancel: false });
+    const name = (result && result.playerName) || "Vô Danh";
+    return {
+      slug: uniqueSlugFor(name, players),
+      isNew: true,
+      newName: name,
+      newDao: result && result.dao,
+    };
   }
   const choice = await choosePlayer(players);
   if (choice && choice.startsWith("__new__:")) {
     const name = choice.slice("__new__:".length) || "Vô Danh";
-    return { slug: uniqueSlugFor(name, players), isNew: true, newName: name };
+    const newDao = pendingNewDaoConfig;
+    pendingNewDaoConfig = null;
+    return { slug: uniqueSlugFor(name, players), isNew: true, newName: name, newDao };
   }
   return { slug: choice, isNew: false };
 }
 
-async function activatePlayer(slug, isNew, newName) {
+async function activatePlayer(slug, isNew, newName, newDao) {
   activePlayerSlug = slug;
   localStorage.setItem(ACTIVE_PLAYER_KEY, slug);
+  customDaos = await loadDaos();
+  if (newDao) persistDao(newDao);
   const [loadedDb, loadedLegends, loadedSectsRegistry] = await Promise.all([
     loadDB(),
     loadLegends(),
@@ -934,6 +1202,7 @@ async function activatePlayer(slug, isNew, newName) {
   legends = normalizeLegends(loadedLegends);
   sectsRegistry = loadedSectsRegistry || {};
   if (isNew) db.player.name = newName || "Vô Danh";
+  if (isNew && newDao) db.settings.activePath = newDao.id;
   populateSelects();
   await ensureName();
   saveDB(db);
@@ -950,7 +1219,9 @@ document.getElementById("switchPlayerBtn").onclick = async () => {
   if (!choice) return;
   if (choice.startsWith("__new__:")) {
     const name = choice.slice("__new__:".length) || "Vô Danh";
-    await activatePlayer(uniqueSlugFor(name, players), true, name);
+    const newDao = pendingNewDaoConfig;
+    pendingNewDaoConfig = null;
+    await activatePlayer(uniqueSlugFor(name, players), true, name, newDao);
   } else if (choice !== activePlayerSlug) {
     await activatePlayer(choice, false);
   }
@@ -975,7 +1246,7 @@ document.getElementById("renameBtn").onclick = async () => {
 function populateSelects() {
   const pathSelect = document.getElementById("pathSelect");
   pathSelect.innerHTML = "";
-  DAO_LIST.forEach((p) => {
+  getAllDaoList().forEach((p) => {
     pathSelect.innerHTML += `<option value="${p.id}">${p.name}</option>`;
   });
   pathSelect.value = getActivePath();
@@ -1001,11 +1272,98 @@ function populateLangSelect() {
 document.getElementById("cpSelect").addEventListener("change", populateLangSelect);
 document.getElementById("savePathBtn").onclick = () => {
   const newPath = document.getElementById("pathSelect").value;
-  if (!PATH_DEFS[newPath]) return;
+  if (!getAllPathDefs()[newPath]) return;
   db.settings.activePath = newPath;
+  if (!db.paths[newPath]) db.paths[newPath] = defaultPathData();
   saveDB(db);
   populateSelects();
   renderAll();
+};
+
+function renderCustomDaoList() {
+  const wrap = document.getElementById("customDaoList");
+  const empty = document.getElementById("customDaoEmpty");
+  if (!wrap) return;
+  const allDefs = getAllPathDefs();
+  const daoIds = [...new Set([...Object.keys(PATH_DEFS), ...Object.keys(customDaos)])];
+  const nameById = Object.fromEntries(getAllDaoList().map((d) => [d.id, d.name]));
+  empty.style.display = daoIds.length ? "none" : "block";
+  wrap.innerHTML = "";
+  daoIds.forEach((id) => {
+    const dao = { ...allDefs[id], id, name: nameById[id] || allDefs[id].name || id };
+    const isBuiltIn = !!PATH_DEFS[id];
+    const hasOverride = !!customDaos[id];
+    const item = document.createElement("div");
+    item.className = "custom-dao-item";
+    const meta = document.createElement("div");
+    meta.className = "custom-dao-item-meta";
+    const badge = isBuiltIn ? " <span class=\"custom-dao-item-tag\">có sẵn</span>" : "";
+    meta.innerHTML = `<strong>${dao.name}</strong>${badge}<div>${dao.topics.length} công pháp — ${dao.topics.map((t) => t.name).join(", ")}</div>`;
+    const actions = document.createElement("div");
+    actions.className = "custom-dao-item-actions";
+    const editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "ghost";
+    editBtn.textContent = "Sửa";
+    editBtn.onclick = async () => {
+      const result = await openDaoWizard({ requirePlayerName: false, initialDao: dao });
+      if (!result) return;
+      persistDao(result.dao);
+      if (!db.paths[result.dao.id]) db.paths[result.dao.id] = defaultPathData();
+      saveDB(db);
+      populateSelects();
+      renderAll();
+      renderCustomDaoList();
+    };
+    actions.append(editBtn);
+    if (isBuiltIn) {
+      const resetBtn = document.createElement("button");
+      resetBtn.type = "button";
+      resetBtn.className = "ghost";
+      resetBtn.textContent = "Khôi phục mặc định";
+      resetBtn.disabled = !hasOverride;
+      resetBtn.onclick = async () => {
+        if (!confirm(`Khôi phục đạo "${dao.name}" về công pháp mặc định ban đầu?`)) return;
+        await removeDao(id);
+        populateSelects();
+        renderAll();
+        renderCustomDaoList();
+      };
+      actions.append(resetBtn);
+    } else {
+      const deleteBtn = document.createElement("button");
+      deleteBtn.type = "button";
+      deleteBtn.className = "ghost";
+      deleteBtn.textContent = "Xóa";
+      deleteBtn.onclick = async () => {
+        if (!confirm(`Xóa đạo "${dao.name}"? Tiến độ công pháp đã lưu theo đạo này sẽ không còn hiển thị.`)) return;
+        await removeDao(id);
+        if (getActivePath() === id) {
+          db.settings.activePath = DEFAULT_PATH;
+          saveDB(db);
+        }
+        populateSelects();
+        renderAll();
+        renderCustomDaoList();
+      };
+      actions.append(deleteBtn);
+    }
+    item.append(meta, actions);
+    wrap.appendChild(item);
+  });
+}
+document.getElementById("createDaoBtn").onclick = async () => {
+  const result = await openDaoWizard({ requirePlayerName: false });
+  if (!result) return;
+  persistDao(result.dao);
+  if (!db.paths[result.dao.id]) db.paths[result.dao.id] = defaultPathData();
+  saveDB(db);
+  populateSelects();
+  renderAll();
+  renderCustomDaoList();
+};
+document.getElementById("downloadDaosBtn").onclick = () => {
+  downloadJSON("dao.json", customDaos);
 };
 
 const tabNavigation = document.querySelector(".tabs");
@@ -1026,6 +1384,21 @@ function updateMobileMenuSpace() {
     `${Math.max(0, availableHeight)}px`,
   );
 }
+
+// Switch to the dropdown nav whenever the pill row would actually clip a tab —
+// not just below a fixed viewport width — so it also kicks in on narrower desktop windows.
+function updateTabsCompactMode() {
+  const wasCompact = tabNavigation.classList.contains("is-compact");
+  if (wasCompact) tabNavigation.classList.remove("is-compact");
+  const overflowing = tabNavigation.scrollWidth > tabNavigation.clientWidth + 1;
+  const shouldBeCompact = window.innerWidth <= 700 || overflowing;
+  tabNavigation.classList.toggle("is-compact", shouldBeCompact);
+  if (!shouldBeCompact) closeMobileNav();
+}
+window.addEventListener("resize", updateTabsCompactMode);
+window.addEventListener("load", updateTabsCompactMode);
+document.fonts?.ready.then(updateTabsCompactMode);
+updateTabsCompactMode();
 
 const mobileSelectMedia = window.matchMedia("(max-width: 700px)");
 const mobileSelectMenu = document.createElement("div");
@@ -1923,6 +2296,7 @@ function populateSettingsExtras() {
     Math.round(panelOpacity * 100) + "%";
   document.getElementById("colorText").value = c.text || "#EDE4D3";
   updateAvatarPreview();
+  renderCustomDaoList();
 }
 
 document.getElementById("saveAvatar").onclick = () => {
@@ -2311,5 +2685,5 @@ function renderAll() {
 
 (async function init() {
   const chosen = await determineActivePlayer();
-  await activatePlayer(chosen.slug, chosen.isNew, chosen.newName);
+  await activatePlayer(chosen.slug, chosen.isNew, chosen.newName, chosen.newDao);
 })();

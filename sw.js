@@ -1,4 +1,4 @@
-const CACHE_NAME = "tu-tien-chi-lo-v3";
+const CACHE_NAME = "tu-tien-chi-lo-v7";
 const APP_SHELL = [
   "/",
   "/styles.css",

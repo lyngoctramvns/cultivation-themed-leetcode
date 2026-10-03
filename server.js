@@ -13,6 +13,7 @@ const PLAYER_FILE_RE = /^db_([a-z0-9]{1,60})\.json$/;
 const STAGES_DIR = path.join(ROOT, "stages");
 const STAGE_IMAGE_RE = /^\/stages\/([a-z_]+\.jpg)$/;
 const SECTS_FILE = path.join(DATA_DIR, "sects.json");
+const DAOS_FILE = path.join(DATA_DIR, "dao.json");
 const SECT_ROLE_KEYS = [
   "master",
   "shizun",
@@ -113,6 +114,15 @@ function mergeSectIntoRegistry(registry, sect) {
   });
   registry[sectSlug] = entry;
   return registry;
+}
+
+// Shared registry of custom-built đạo (tên đạo + công pháp + ngôn ngữ) reusable across players.
+function readDaosRegistry() {
+  const data = readJSON(DAOS_FILE, {});
+  return data && typeof data === "object" ? data : {};
+}
+function writeDaosRegistry(registry) {
+  writeJSON(DAOS_FILE, registry);
 }
 
 function countProblems(data) {
@@ -296,6 +306,48 @@ const server = http.createServer(async (req, res) => {
       const registry = readSectsRegistry();
       mergeSectIntoRegistry(registry, payload && payload.sect);
       writeSectsRegistry(registry);
+      sendJSON(res, 200, { ok: true });
+    } catch (e) {
+      sendJSON(res, 400, { ok: false, error: "Invalid JSON" });
+    }
+    return;
+  }
+
+  // Shared registry of custom đạo (path configs) so any player can reuse/edit/delete them.
+  if (pathname === "/api/daos" && req.method === "GET") {
+    sendJSON(res, 200, readDaosRegistry());
+    return;
+  }
+
+  if (pathname === "/api/daos" && req.method === "DELETE") {
+    const daoId = requestUrl.searchParams.get("id");
+    if (!isValidSlug(daoId)) {
+      sendJSON(res, 400, { ok: false, error: "Missing or invalid dao id" });
+      return;
+    }
+    const registry = readDaosRegistry();
+    if (!Object.prototype.hasOwnProperty.call(registry, daoId)) {
+      sendJSON(res, 404, { ok: false, error: "Dao not found" });
+      return;
+    }
+    delete registry[daoId];
+    writeDaosRegistry(registry);
+    sendJSON(res, 200, { ok: true });
+    return;
+  }
+
+  if (pathname === "/api/daos" && req.method === "POST") {
+    try {
+      const body = await readRequestBody(req);
+      const payload = JSON.parse(body || "{}");
+      const dao = payload && payload.dao;
+      if (!dao || typeof dao.id !== "string" || !isValidSlug(dao.id)) {
+        sendJSON(res, 400, { ok: false, error: "Invalid dao" });
+        return;
+      }
+      const registry = readDaosRegistry();
+      registry[dao.id] = dao;
+      writeDaosRegistry(registry);
       sendJSON(res, 200, { ok: true });
     } catch (e) {
       sendJSON(res, 400, { ok: false, error: "Invalid JSON" });

@@ -64,16 +64,6 @@
     </div>
 
     <div class="card">
-      <div style="font-size:.85rem;color:var(--text-dim);">Sao lưu tiến độ</div>
-      <div class="setup-note">Tải xuống hai tệp dữ liệu hiện tại (db.json và truyenky.json) để lưu trữ dự phòng.</div>
-      <button class="ghost" id="downloadDataBtn" style="margin-top:10px;">Tải xuống kiếp này</button>
-      <div class="setup-note" style="margin-top:14px;">Nhập lại db.json và truyenky.json đã lưu trước đó (dùng khi app trên Hostinger bị xóa và cần khôi phục).</div>
-      <button class="ghost" id="restoreDataBtn" style="margin-top:10px;">Hồi sinh kiếp cũ</button>
-      <input type="file" id="restoreDataInput" accept="application/json" multiple hidden>
-      <div class="setup-note" id="restoreDataStatus" role="status" aria-live="polite"></div>
-    </div>
-
-    <div class="card">
       <div style="font-size:.85rem;color:var(--text-dim);">Đại nguyện tu tiên</div>
       <div class="setup-note" id="goalDistNote"></div>
       <div class="cp-row" style="margin-top:10px;"><span id="goalProgressLabel">0 / 150</span><span id="goalProgressPct">0%</span></div>
@@ -131,10 +121,6 @@
         <div style="color:var(--text-dim);font-size:.85rem;margin-bottom:8px;">30 ngày gần nhất</div>
         <div class="cal-grid" id="calGrid"></div>
       </div>
-    </div>
-    <div class="card">
-      <div class="setup-note">Dữ liệu được lưu trong db.json và truyenky.json. Muốn tu luyện lại từ đầu, bấm nút bên dưới để xóa toàn bộ tiến độ và bắt đầu một kiếp tu tiên mới.</div>
-      <button class="ghost" id="resetBtn" style="margin-top:10px;color:#e08c85;border-color:var(--danger);">Chuyển kiếp (xóa toàn bộ dữ liệu)</button>
     </div>
   </div>
 
@@ -299,6 +285,17 @@
     </div>
 
     <div class="card">
+      <h3 class="serif" style="margin-top:0;">Quản Lý Đạo Tự Tạo</h3>
+      <div class="setup-note">Sửa công pháp/ngôn ngữ của các đạo có sẵn (Kiếm Đạo, Thương Đạo), hoặc tạo đạo tu luyện hoàn toàn mới.</div>
+      <div class="row" style="margin-top:10px;">
+        <button class="primary" id="createDaoBtn" type="button">+ Tạo Đạo Mới</button>
+        <button class="ghost" id="downloadDaosBtn" type="button">Tải xuống dao.json</button>
+      </div>
+      <div id="customDaoList" class="custom-dao-list" style="margin-top:14px;"></div>
+      <div class="setup-note" id="customDaoEmpty" style="display:none;">Chưa có đạo nào.</div>
+    </div>
+
+    <div class="card">
       <h3 class="serif" style="margin-top:0;">Mục Tiêu Tu Luyện</h3>
       <label>Mục tiêu tu luyện mỗi ngày (chiêu thức)</label>
       <div class="row">
@@ -397,6 +394,22 @@
         <button class="ghost" id="resetColors">Khôi phục màu mặc định</button>
       </div>
     </div>
+
+    <div class="card">
+      <h3 class="serif" style="margin-top:0;">Sao Lưu Tiến Độ</h3>
+      <div class="setup-note">Tải xuống hai tệp dữ liệu hiện tại (db.json và truyenky.json) để lưu trữ dự phòng.</div>
+      <button class="ghost" id="downloadDataBtn" style="margin-top:10px;">Tải xuống kiếp này</button>
+      <div class="setup-note" style="margin-top:14px;">Nhập lại db.json và truyenky.json đã lưu trước đó (dùng khi app trên Hostinger bị xóa và cần khôi phục).</div>
+      <button class="ghost" id="restoreDataBtn" style="margin-top:10px;">Hồi sinh kiếp cũ</button>
+      <input type="file" id="restoreDataInput" accept="application/json" multiple hidden>
+      <div class="setup-note" id="restoreDataStatus" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="card">
+      <h3 class="serif" style="margin-top:0;">Chuyển Kiếp</h3>
+      <div class="setup-note">Dữ liệu được lưu trong db.json và truyenky.json. Muốn tu luyện lại từ đầu, bấm nút bên dưới để xóa toàn bộ tiến độ và bắt đầu một kiếp tu tiên mới.</div>
+      <button class="ghost" id="resetBtn" style="margin-top:10px;color:#e08c85;border-color:var(--danger);">Chuyển kiếp (xóa toàn bộ dữ liệu)</button>
+    </div>
   </div>
 </div>
 
@@ -448,6 +461,41 @@
   </form>
 </dialog>
 
+<dialog id="daoWizardDialog" class="textarea-editor name-dialog dao-wizard-dialog" aria-labelledby="daoWizardTitle">
+  <form id="daoWizardForm" novalidate>
+    <div class="textarea-editor-header">
+      <h2 class="serif" id="daoWizardTitle">Khai Mở Đạo Tu Luyện</h2>
+    </div>
+    <div class="setup-note">Đặt tên đạo, số lượng công pháp và ngôn ngữ luyện công riêng cho từng công pháp — không còn bị bó buộc vào các đạo có sẵn.</div>
+
+    <div id="daoWizardNameField">
+      <label for="daoWizardPlayerName">Đạo hiệu của đạo hữu</label>
+      <input type="text" id="daoWizardPlayerName" maxlength="40" placeholder="Nhập đạo hiệu" autocomplete="off">
+      <div class="err" id="daoWizardPlayerNameError" role="alert">Đạo hiệu không được để trống.</div>
+    </div>
+
+    <label for="daoWizardDaoName">Đạo của đạo hữu tu là gì?</label>
+    <input type="text" id="daoWizardDaoName" maxlength="60" placeholder="Vd: Kiếm Đạo, Đan Đạo, Thương Đạo...">
+    <div class="err" id="daoWizardDaoNameError" role="alert">Tên đạo không được để trống.</div>
+
+    <label for="daoWizardTopicCount">Đạo có bao nhiêu công pháp?</label>
+    <input type="number" id="daoWizardTopicCount" min="1" max="20" value="3" style="max-width:120px;">
+
+    <div id="daoWizardTopicsList" class="dao-topics-list"></div>
+    <div class="err" id="daoWizardError" role="alert">Vui lòng điền đủ tên công pháp và ngôn ngữ cho mỗi công pháp.</div>
+
+    <div class="dao-wizard-preview">
+      <h4 class="serif" style="margin-bottom:8px;">Xem trước sơ đồ công pháp</h4>
+      <div id="daoWizardPreview"></div>
+    </div>
+
+    <div class="row textarea-editor-actions">
+      <button class="ghost" id="cancelDaoWizard" type="button">Hủy</button>
+      <button class="primary" type="submit">Lưu đạo</button>
+    </div>
+  </form>
+</dialog>
+
 <script src="app.js"></script>
 <script>
   if ("serviceWorker" in navigator) {
@@ -458,6 +506,7 @@
     });
   }
 </script>
+
 </body>
 </html>
 
