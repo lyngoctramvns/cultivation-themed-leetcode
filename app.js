@@ -1519,6 +1519,10 @@ function openMobileSelectPicker(select) {
   }
   closeMobileSelectPicker();
   const picker = mobileSelectPickers.get(select);
+  // A <dialog> opened with showModal() makes everything outside it inert (untappable),
+  // so the shared menu must live inside the open dialog to receive touch/click input.
+  const container = select.closest("dialog[open]") || document.body;
+  if (mobileSelectMenu.parentElement !== container) container.appendChild(mobileSelectMenu);
   syncMobileSelectPicker(select);
   mobileSelectMenu.replaceChildren();
   Array.from(select.options).forEach((option) => {
