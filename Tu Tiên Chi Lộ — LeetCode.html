@@ -474,15 +474,22 @@
       <div class="err" id="daoWizardPlayerNameError" role="alert">Đạo hiệu không được để trống.</div>
     </div>
 
-    <label for="daoWizardDaoName">Đạo của đạo hữu tu là gì?</label>
-    <input type="text" id="daoWizardDaoName" maxlength="60" placeholder="Vd: Kiếm Đạo, Đan Đạo, Thương Đạo...">
-    <div class="err" id="daoWizardDaoNameError" role="alert">Tên đạo không được để trống.</div>
+    <div id="daoWizardExistingField">
+      <label for="daoWizardExistingSelect">Đạo hữu muốn tu luyện đạo nào?</label>
+      <select id="daoWizardExistingSelect"></select>
+    </div>
 
-    <label for="daoWizardTopicCount">Đạo có bao nhiêu công pháp?</label>
-    <input type="number" id="daoWizardTopicCount" min="1" max="20" value="3" style="max-width:120px;">
+    <div id="daoWizardNewFields">
+      <label for="daoWizardDaoName">Đạo của đạo hữu tu là gì?</label>
+      <input type="text" id="daoWizardDaoName" maxlength="60" placeholder="Vd: Kiếm Đạo, Đan Đạo, Thương Đạo...">
+      <div class="err" id="daoWizardDaoNameError" role="alert">Tên đạo không được để trống.</div>
 
-    <div id="daoWizardTopicsList" class="dao-topics-list"></div>
-    <div class="err" id="daoWizardError" role="alert">Vui lòng điền đủ tên công pháp và ngôn ngữ cho mỗi công pháp.</div>
+      <label for="daoWizardTopicCount">Đạo có bao nhiêu công pháp?</label>
+      <input type="number" id="daoWizardTopicCount" min="1" max="20" value="3" style="max-width:120px;">
+
+      <div id="daoWizardTopicsList" class="dao-topics-list"></div>
+      <div class="err" id="daoWizardError" role="alert">Vui lòng điền đủ tên công pháp và ngôn ngữ cho mỗi công pháp.</div>
+    </div>
 
     <div class="dao-wizard-preview">
       <h4 class="serif" style="margin-bottom:8px;">Xem trước sơ đồ công pháp</h4>

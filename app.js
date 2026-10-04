@@ -871,6 +871,9 @@ const daoWizardForm = document.getElementById("daoWizardForm");
 const daoWizardNameField = document.getElementById("daoWizardNameField");
 const daoWizardPlayerName = document.getElementById("daoWizardPlayerName");
 const daoWizardPlayerNameError = document.getElementById("daoWizardPlayerNameError");
+const daoWizardExistingField = document.getElementById("daoWizardExistingField");
+const daoWizardExistingSelect = document.getElementById("daoWizardExistingSelect");
+const daoWizardNewFields = document.getElementById("daoWizardNewFields");
 const daoWizardDaoName = document.getElementById("daoWizardDaoName");
 const daoWizardDaoNameError = document.getElementById("daoWizardDaoNameError");
 const daoWizardTopicCount = document.getElementById("daoWizardTopicCount");
@@ -926,6 +929,33 @@ daoWizardTopicCount.addEventListener("input", () => {
   renderDaoTopicRows(count);
 });
 
+function renderExistingDaoPreview(dao) {
+  if (!dao) {
+    daoWizardPreview.innerHTML = "";
+    return;
+  }
+  const items = dao.topics
+    .map(
+      (t) =>
+        `<tr><td>${t.name}</td><td>${(t.languages || dao.languages || []).map((l) => l.label).join(", ") || "—"}</td></tr>`,
+    )
+    .join("");
+  daoWizardPreview.innerHTML = `<table><thead><tr><th>Công pháp</th><th>Ngôn ngữ</th></tr></thead><tbody>${items}</tbody></table>`;
+}
+function daoWizardUsingExisting() {
+  return daoWizardExistingField.style.display !== "none" && daoWizardExistingSelect.value !== "";
+}
+function updateDaoWizardMode() {
+  const usingExisting = daoWizardUsingExisting();
+  daoWizardNewFields.style.display = usingExisting ? "none" : "block";
+  if (usingExisting) {
+    renderExistingDaoPreview(getAllPathDefs()[daoWizardExistingSelect.value]);
+  } else {
+    renderDaoWizardPreview();
+  }
+}
+daoWizardExistingSelect.addEventListener("change", updateDaoWizardMode);
+
 function buildDaoFromWizard(initialDao) {
   const daoName = daoWizardDaoName.value.trim();
   const rows = readDaoTopicRows();
@@ -980,7 +1010,7 @@ function buildDaoFromWizard(initialDao) {
   return { id, name: daoName, languageMode: "byTopic", topics };
 }
 
-function openDaoWizard({ requirePlayerName = false, initialPlayerName = "", initialDao = null, allowCancel = true } = {}) {
+function openDaoWizard({ requirePlayerName = false, initialPlayerName = "", initialDao = null, allowCancel = true, allowExistingPick = false } = {}) {
   daoWizardEditingId = initialDao ? initialDao.id : null;
   document.getElementById("daoWizardTitle").textContent = initialDao
     ? "Chỉnh Sửa Đạo"
@@ -988,6 +1018,14 @@ function openDaoWizard({ requirePlayerName = false, initialPlayerName = "", init
   daoWizardNameField.style.display = requirePlayerName ? "block" : "none";
   daoWizardPlayerName.value = initialPlayerName;
   daoWizardPlayerNameError.style.display = "none";
+  const showExistingPicker = allowExistingPick && !initialDao;
+  daoWizardExistingField.style.display = showExistingPicker ? "block" : "none";
+  if (showExistingPicker) {
+    daoWizardExistingSelect.innerHTML =
+      `<option value="">✦ Khai mở đạo mới</option>` +
+      getAllDaoList().map((d) => `<option value="${d.id}">${d.name}</option>`).join("");
+    daoWizardExistingSelect.value = getAllPathDefs()[getActivePath()] ? getActivePath() : DEFAULT_PATH;
+  }
   daoWizardDaoName.value = initialDao ? initialDao.name : "";
   daoWizardDaoNameError.style.display = "none";
   daoWizardError.style.display = "none";
@@ -1003,6 +1041,7 @@ function openDaoWizard({ requirePlayerName = false, initialPlayerName = "", init
       }))
     : [];
   renderDaoTopicRows(topicCount, initialRows);
+  updateDaoWizardMode();
   daoWizardDialog.returnValue = "";
   const onCancel = (event) => {
     if (!allowCancel) event.preventDefault();
@@ -1017,7 +1056,9 @@ function openDaoWizard({ requirePlayerName = false, initialPlayerName = "", init
           resolve(null);
           return;
         }
-        const dao = buildDaoFromWizard(initialDao);
+        const dao = daoWizardUsingExisting()
+          ? { ...getAllPathDefs()[daoWizardExistingSelect.value], id: daoWizardExistingSelect.value }
+          : buildDaoFromWizard(initialDao);
         const playerName = requirePlayerName ? daoWizardPlayerName.value.trim() : null;
         resolve(dao ? { dao, playerName } : null);
       },
@@ -1025,7 +1066,12 @@ function openDaoWizard({ requirePlayerName = false, initialPlayerName = "", init
     );
   });
   daoWizardDialog.showModal();
-  (requirePlayerName && !initialPlayerName ? daoWizardPlayerName : daoWizardDaoName).focus();
+  (requirePlayerName && !initialPlayerName
+    ? daoWizardPlayerName
+    : showExistingPicker
+      ? daoWizardExistingSelect
+      : daoWizardDaoName
+  ).focus();
   return closed;
 }
 
@@ -1035,6 +1081,10 @@ daoWizardForm.addEventListener("submit", (event) => {
   if (requirePlayerName && !daoWizardPlayerName.value.trim()) {
     daoWizardPlayerNameError.style.display = "block";
     daoWizardPlayerName.focus();
+    return;
+  }
+  if (daoWizardUsingExisting()) {
+    daoWizardDialog.close("save");
     return;
   }
   if (!daoWizardDaoName.value.trim()) {
@@ -1156,7 +1206,7 @@ playerDialogForm.addEventListener("submit", async (event) => {
     playerDialogInput.focus();
     return;
   }
-  const result = await openDaoWizard({ requirePlayerName: false });
+  const result = await openDaoWizard({ requirePlayerName: false, allowExistingPick: true });
   if (!result) return;
   pendingNewDaoConfig = result.dao;
   playerDialog.close(`__new__:${name}`);
@@ -1169,7 +1219,7 @@ async function determineActivePlayer() {
     return { slug: storedSlug, isNew: false };
   }
   if (players.length === 0) {
-    const result = await openDaoWizard({ requirePlayerName: true, allowCancel: false });
+    const result = await openDaoWizard({ requirePlayerName: true, allowCancel: false, allowExistingPick: true });
     const name = (result && result.playerName) || "Vô Danh";
     return {
       slug: uniqueSlugFor(name, players),
@@ -1192,7 +1242,7 @@ async function activatePlayer(slug, isNew, newName, newDao) {
   activePlayerSlug = slug;
   localStorage.setItem(ACTIVE_PLAYER_KEY, slug);
   customDaos = await loadDaos();
-  if (newDao) persistDao(newDao);
+  if (newDao && !getAllPathDefs()[newDao.id]) persistDao(newDao);
   const [loadedDb, loadedLegends, loadedSectsRegistry] = await Promise.all([
     loadDB(),
     loadLegends(),
