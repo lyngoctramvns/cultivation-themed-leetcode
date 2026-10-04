@@ -614,6 +614,29 @@ textarea {
   min-height: 72px;
   font-family: inherit;
 }
+.flashcard-progress {
+  flex: none;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+.flashcard-question {
+  margin: 14px 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--bg2);
+  text-align: center;
+}
+.flashcard-cp {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.flashcard-name {
+  font-size: 1.15rem;
+  color: var(--gold);
+  font-family: "Noto Serif", Georgia, serif;
+}
 .row {
   display: flex;
   gap: 12px;
@@ -731,6 +754,10 @@ tr.solved-row {
 }
 tr.solved-row:hover {
   background: rgba(212, 175, 55, 0.05);
+}
+.row-edit-btn {
+  padding: 4px 10px;
+  font-size: 0.75rem;
 }
 .code-view {
   display: none;

@@ -808,6 +808,20 @@ function realmFor(count) {
   for (const x of R) if (count >= x.min) r = x;
   return r.name;
 }
+const BREAKTHROUGH_REVIEW_RATIO = 0.6;
+// Decide whether adding one more problem crosses into a new đại cảnh giới, and if so
+// return the pool of chiêu thức learned during the current realm that must be reviewed.
+function getRealmReviewContext(problems, totalBefore) {
+  const beforeName = realmFor(totalBefore);
+  const afterName = realmFor(totalBefore + 1);
+  if (beforeName === afterName) return null;
+  const realms = getRealms();
+  const current = realms.find((r) => r.name === beforeName);
+  const next = realms.find((r) => r.name === afterName);
+  const pool = problems.slice(current.min, totalBefore);
+  if (!pool.length) return null;
+  return { current, next, pool };
+}
 function tribulationProgress(count) {
   const nextRealm = getRealms().find(
     (realm) => realm.tribulation && count < realm.min,
@@ -1807,7 +1821,10 @@ document.addEventListener("click", (event) => {
 
   textareaBeingEdited = textarea;
   textareaEditorInput.value = textarea.value;
-  textareaEditorInput.classList.toggle("code-editor", textarea.id === "codeInput");
+  textareaEditorInput.classList.toggle(
+    "code-editor",
+    textarea.id === "codeInput" || textarea.id === "editProblemCode",
+  );
   document.getElementById("textareaEditorTitle").textContent =
     textarea.dataset.editorTitle ||
     textarea.labels?.[0]?.textContent.trim() ||
@@ -2435,7 +2452,106 @@ document.getElementById("resetColors").onclick = () => {
   populateSettingsExtras();
 };
 
-document.getElementById("submitBtn").onclick = () => {
+const breakthroughGateDialog = document.getElementById("breakthroughGateDialog");
+function confirmBreakthroughGate(gate) {
+  document.getElementById("breakthroughGateMessage").textContent =
+    `Đạo hữu đã đủ chiêu thức để đột phá từ ${gate.current.name} lên ${gate.next.name}! Trước khi đột phá đại cảnh giới, cần diễn hóa (ôn tập) lại đúng ít nhất ${Math.ceil(gate.pool.length * BREAKTHROUGH_REVIEW_RATIO)}/${gate.pool.length} chiêu thức đã lĩnh ngộ ở ${gate.current.name}. Đạo hữu có muốn diễn hóa ngay không?`;
+  breakthroughGateDialog.returnValue = "";
+  const closed = new Promise((resolve) => {
+    breakthroughGateDialog.addEventListener(
+      "close",
+      () => resolve(breakthroughGateDialog.returnValue === "start"),
+      { once: true },
+    );
+  });
+  breakthroughGateDialog.showModal();
+  return closed;
+}
+document.getElementById("breakthroughGateStart").onclick = () =>
+  breakthroughGateDialog.close("start");
+document.getElementById("breakthroughGateLater").onclick = () =>
+  breakthroughGateDialog.close("later");
+
+const flashcardDialog = document.getElementById("flashcardDialog");
+const flashcardScratch = document.getElementById("flashcardScratch");
+const flashcardAnswerWrap = document.getElementById("flashcardAnswerWrap");
+const flashcardAnswerCode = document.getElementById("flashcardAnswerCode");
+const flashcardReveal = document.getElementById("flashcardReveal");
+const flashcardRight = document.getElementById("flashcardRight");
+const flashcardWrong = document.getElementById("flashcardWrong");
+let flashcardCurrentCode = "";
+
+function shuffledCopy(list) {
+  const arr = list.slice();
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+function askFlashcard(problem, index, total) {
+  flashcardCurrentCode = problem.code;
+  document.getElementById("flashcardProgress").textContent = `Câu ${index + 1}/${total}`;
+  document.getElementById("flashcardCp").textContent = tenCongPhap(problem.congPhap);
+  document.getElementById("flashcardName").textContent = problem.chieuThuc;
+  flashcardScratch.value = "";
+  flashcardAnswerWrap.style.display = "none";
+  flashcardAnswerCode.textContent = "";
+  flashcardReveal.style.display = "inline-block";
+  flashcardRight.style.display = "none";
+  flashcardWrong.style.display = "none";
+  flashcardDialog.returnValue = "";
+  const closed = new Promise((resolve) => {
+    flashcardDialog.addEventListener(
+      "close",
+      () => resolve(flashcardDialog.returnValue),
+      { once: true },
+    );
+  });
+  flashcardDialog.showModal();
+  return closed;
+}
+flashcardReveal.onclick = () => {
+  flashcardAnswerCode.textContent = flashcardCurrentCode;
+  flashcardAnswerWrap.style.display = "block";
+  flashcardReveal.style.display = "none";
+  flashcardRight.style.display = "inline-block";
+  flashcardWrong.style.display = "inline-block";
+};
+flashcardRight.onclick = () => flashcardDialog.close("right");
+flashcardWrong.onclick = () => flashcardDialog.close("wrong");
+document.getElementById("flashcardCancel").onclick = () => flashcardDialog.close("cancel");
+
+async function runFlashcardReview(pool) {
+  const order = shuffledCopy(pool);
+  let correct = 0;
+  for (let i = 0; i < order.length; i++) {
+    const outcome = await askFlashcard(order[i], i, order.length);
+    if (outcome === "cancel") return null;
+    if (outcome === "right") correct++;
+  }
+  return { correct, total: order.length };
+}
+
+const flashcardSummaryDialog = document.getElementById("flashcardSummaryDialog");
+function showFlashcardSummary(gate, result, required, passed) {
+  const pct = Math.round((result.correct / result.total) * 100);
+  document.getElementById("flashcardSummaryTitle").textContent = passed
+    ? "Đột Phá Thành Công!"
+    : "Chưa Đủ Điều Kiện Đột Phá";
+  document.getElementById("flashcardSummaryMessage").textContent = passed
+    ? `Đạo hữu đã diễn hóa đúng ${result.correct}/${result.total} chiêu thức (${pct}%), đủ điều kiện đột phá lên ${gate.next.name}!`
+    : `Đạo hữu chỉ diễn hóa đúng ${result.correct}/${result.total} chiêu thức (${pct}%), cần ít nhất ${required}/${result.total} (${Math.round(BREAKTHROUGH_REVIEW_RATIO * 100)}%) để đột phá lên ${gate.next.name}. Hãy ôn luyện thêm rồi thử lại.`;
+  flashcardSummaryDialog.returnValue = "";
+  const closed = new Promise((resolve) => {
+    flashcardSummaryDialog.addEventListener("close", () => resolve(), { once: true });
+  });
+  flashcardSummaryDialog.showModal();
+  return closed;
+}
+document.getElementById("flashcardSummaryClose").onclick = () => flashcardSummaryDialog.close();
+
+document.getElementById("submitBtn").onclick = async () => {
   const cp = document.getElementById("cpSelect").value;
   const name = document.getElementById("chieuThucInput").value.trim();
   const lang = document.getElementById("langSelect").value;
@@ -2446,6 +2562,20 @@ document.getElementById("submitBtn").onclick = () => {
     return;
   }
   err.style.display = "none";
+
+  const problems = currentPathData().problems;
+  const gate = getRealmReviewContext(problems, problems.length);
+  if (gate) {
+    const wantsReview = await confirmBreakthroughGate(gate);
+    if (!wantsReview) return;
+    const result = await runFlashcardReview(gate.pool);
+    if (!result) return;
+    const required = Math.ceil(gate.pool.length * BREAKTHROUGH_REVIEW_RATIO);
+    const passed = result.correct >= required;
+    await showFlashcardSummary(gate, result, required, passed);
+    if (!passed) return;
+  }
+
   currentPathData().problems.push({
     id: Date.now(),
     congPhap: cp,
@@ -2557,10 +2687,19 @@ function renderTable() {
   list.forEach((p) => {
     const tr = document.createElement("tr");
     tr.className = "solved-row";
-    tr.innerHTML = `<td>${escapeHtml(p.chieuThuc)}</td><td><span class="pill">${tenCongPhap(p.congPhap)}</span></td><td>${escapeHtml(tenNgonNgu(p))}</td><td>${p.date}</td>`;
+    tr.innerHTML = `<td>${escapeHtml(p.chieuThuc)}</td><td><span class="pill">${tenCongPhap(p.congPhap)}</span></td><td>${escapeHtml(tenNgonNgu(p))}</td><td>${p.date}</td><td></td>`;
+    const editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "ghost row-edit-btn";
+    editBtn.textContent = "Sửa";
+    editBtn.onclick = (event) => {
+      event.stopPropagation();
+      openEditProblemDialog(p);
+    };
+    tr.lastElementChild.appendChild(editBtn);
     const codeRow = document.createElement("tr");
     const codeTd = document.createElement("td");
-    codeTd.colSpan = 4;
+    codeTd.colSpan = 5;
     const pre = document.createElement("div");
     pre.className = "code-view";
     pre.textContent = p.code;
@@ -2573,6 +2712,67 @@ function renderTable() {
     body.appendChild(codeRow);
   });
 }
+
+const editProblemDialog = document.getElementById("editProblemDialog");
+const editProblemCp = document.getElementById("editProblemCp");
+const editProblemLang = document.getElementById("editProblemLang");
+const editProblemName = document.getElementById("editProblemName");
+const editProblemCode = document.getElementById("editProblemCode");
+let problemBeingEdited = null;
+
+function populateEditProblemLangSelect(selectedLang) {
+  const options = getLanguageOptionsFor(editProblemCp.value);
+  const hasCurrent = options.some((o) => o.id === selectedLang);
+  editProblemLang.innerHTML =
+    options.map((o) => `<option value="${o.id}">${escapeHtml(o.label)}</option>`).join("") +
+    (hasCurrent || !selectedLang
+      ? ""
+      : `<option value="${escapeHtml(selectedLang)}">${escapeHtml(selectedLang)}</option>`);
+  editProblemLang.value = selectedLang || options[0]?.id || "";
+}
+editProblemCp.addEventListener("change", () => populateEditProblemLangSelect());
+
+function openEditProblemDialog(problem) {
+  problemBeingEdited = problem;
+  const topics = getActiveTopics();
+  const hasCurrentCp = topics.some((t) => t.id === problem.congPhap);
+  editProblemCp.innerHTML =
+    topics.map((t) => `<option value="${t.id}">${escapeHtml(tenCongPhap(t.id))}</option>`).join("") +
+    (hasCurrentCp
+      ? ""
+      : `<option value="${escapeHtml(problem.congPhap)}">${escapeHtml(tenCongPhap(problem.congPhap))}</option>`);
+  editProblemCp.value = problem.congPhap;
+  populateEditProblemLangSelect(problem.lang);
+  editProblemName.value = problem.chieuThuc;
+  editProblemCode.value = problem.code;
+  document.getElementById("editProblemNameError").style.display = "none";
+  document.getElementById("editProblemCodeError").style.display = "none";
+  editProblemDialog.showModal();
+  editProblemName.focus();
+}
+document.getElementById("editProblemForm").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = editProblemName.value.trim();
+  const code = editProblemCode.value.trim();
+  if (!name) {
+    document.getElementById("editProblemNameError").style.display = "block";
+    editProblemName.focus();
+    return;
+  }
+  if (!code) {
+    document.getElementById("editProblemCodeError").style.display = "block";
+    editProblemCode.focus();
+    return;
+  }
+  problemBeingEdited.congPhap = editProblemCp.value;
+  problemBeingEdited.lang = editProblemLang.value;
+  problemBeingEdited.chieuThuc = name;
+  problemBeingEdited.code = code;
+  saveDB(db);
+  editProblemDialog.close();
+  renderAll();
+});
+document.getElementById("cancelEditProblem").onclick = () => editProblemDialog.close();
 
 function escapeHtml(s) {
   return s.replace(

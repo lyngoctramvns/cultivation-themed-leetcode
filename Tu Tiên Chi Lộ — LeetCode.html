@@ -103,7 +103,7 @@
         <select id="filterCp"><option value="">Tất cả công pháp</option></select>
       </div>
       <table>
-        <thead><tr><th>Chiêu thức</th><th>Công pháp</th><th>Ngôn ngữ</th><th>Ngày luyện</th></tr></thead>
+        <thead><tr><th>Chiêu thức</th><th>Công pháp</th><th>Ngôn ngữ</th><th>Ngày luyện</th><th></th></tr></thead>
         <tbody id="tblBody"></tbody>
       </table>
       <div class="empty" id="tblEmpty" style="display:none;">Chưa có chiêu thức nào khớp tìm kiếm.</div>
@@ -499,6 +499,72 @@
     <div class="row textarea-editor-actions">
       <button class="ghost" id="cancelDaoWizard" type="button">Hủy</button>
       <button class="primary" type="submit">Lưu đạo</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="breakthroughGateDialog" class="textarea-editor name-dialog" aria-labelledby="breakthroughGateTitle">
+  <div class="textarea-editor-header">
+    <h2 class="serif" id="breakthroughGateTitle">Ngưỡng Đại Cảnh Giới</h2>
+  </div>
+  <div class="setup-note" id="breakthroughGateMessage"></div>
+  <div class="row textarea-editor-actions">
+    <button class="ghost" id="breakthroughGateLater" type="button">Để sau</button>
+    <button class="primary" id="breakthroughGateStart" type="button">Diễn Hóa Ngay</button>
+  </div>
+</dialog>
+
+<dialog id="flashcardDialog" class="textarea-editor name-dialog flashcard-dialog" aria-labelledby="flashcardTitle">
+  <div class="textarea-editor-header">
+    <h2 class="serif" id="flashcardTitle">Diễn Hóa Công Pháp</h2>
+    <span class="flashcard-progress" id="flashcardProgress"></span>
+  </div>
+  <div class="setup-note">Hãy nhẩm trong đầu hoặc viết ra khẩu quyết (code) của chiêu thức dưới đây, sau đó bấm "Diễn Hóa" để đối chiếu với khẩu quyết đúng.</div>
+  <div class="flashcard-question">
+    <div class="flashcard-cp" id="flashcardCp"></div>
+    <div class="flashcard-name" id="flashcardName"></div>
+  </div>
+  <textarea id="flashcardScratch" placeholder="(Tùy chọn) Ghi nháp khẩu quyết của đạo hữu ở đây..." rows="6"></textarea>
+  <div id="flashcardAnswerWrap" style="display:none;">
+    <label>Khẩu quyết chính xác</label>
+    <div class="code-view" id="flashcardAnswerCode" style="display:block;"></div>
+  </div>
+  <div class="row textarea-editor-actions">
+    <button class="ghost" id="flashcardCancel" type="button">Hủy ôn tập</button>
+    <button class="ghost" id="flashcardWrong" type="button" style="display:none;color:#e08c85;border-color:var(--danger);">Chưa đúng</button>
+    <button class="primary" id="flashcardRight" type="button" style="display:none;">Đúng rồi</button>
+    <button class="primary" id="flashcardReveal" type="button">Diễn Hóa</button>
+  </div>
+</dialog>
+
+<dialog id="flashcardSummaryDialog" class="textarea-editor name-dialog" aria-labelledby="flashcardSummaryTitle">
+  <div class="textarea-editor-header">
+    <h2 class="serif" id="flashcardSummaryTitle">Kết Quả Diễn Hóa</h2>
+  </div>
+  <div class="setup-note" id="flashcardSummaryMessage"></div>
+  <div class="row textarea-editor-actions">
+    <button class="primary" id="flashcardSummaryClose" type="button">Đã rõ</button>
+  </div>
+</dialog>
+
+<dialog id="editProblemDialog" class="textarea-editor name-dialog" aria-labelledby="editProblemTitle">
+  <form id="editProblemForm" novalidate>
+    <div class="textarea-editor-header">
+      <h2 class="serif" id="editProblemTitle">Sửa Chiêu Thức</h2>
+    </div>
+    <label for="editProblemCp">Công pháp</label>
+    <select id="editProblemCp"></select>
+    <label for="editProblemLang">Ngôn ngữ luyện công</label>
+    <select id="editProblemLang"></select>
+    <label for="editProblemName">Tên chiêu thức</label>
+    <input type="text" id="editProblemName" maxlength="200">
+    <div class="err" id="editProblemNameError" role="alert">Tên chiêu thức không được để trống.</div>
+    <label for="editProblemCode">Khẩu quyết vận công</label>
+    <textarea id="editProblemCode" data-editor-title="Khẩu quyết vận công" rows="10"></textarea>
+    <div class="err" id="editProblemCodeError" role="alert">Khẩu quyết không được để trống.</div>
+    <div class="row textarea-editor-actions">
+      <button class="ghost" id="cancelEditProblem" type="button">Hủy</button>
+      <button class="primary" type="submit">Lưu chiêu thức</button>
     </div>
   </form>
 </dialog>
